@@ -23,4 +23,5 @@ response = urllib2.urlopen(req).read()
 
 zapVars = json.loads(response)
 
-print(zapVars.token)
+zapToken = zapVars["token"]
+print("Token: " + zapToken)
