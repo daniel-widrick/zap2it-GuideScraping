@@ -1,0 +1,50 @@
+Request URL: https://tvlistings.zap2it.com/api/user/login
+Request Method: POST
+Status Code: 200 
+Remote Address: 54.200.81.31:443
+Referrer Policy: no-referrer-when-downgrade
+access-control-allow-credentials: true
+access-control-allow-headers: host,x-forwarded-proto,x-forwarded-port,x-amzn-trace-id,pragma,cache-control,accept,origin,x-requested-with,user-agent,content-type,referer,accept-encoding,accept-language,x-forwarded-for,x-forwarded-host,x-forwarded-server,connection,content-length
+access-control-allow-methods: POST
+access-control-allow-origin: https://tvlistings.zap2it.com
+content-encoding: gzip
+content-length: 514
+content-type: application/json; charset=utf-8
+date: Sat, 31 Mar 2018 19:56:45 GMT
+etag: W/"2ef-CxFmR4c3VNlfs6+uc2AsXY6QOLE-gzip"
+server: Apache
+status: 200
+vary: Accept-Encoding
+:authority: tvlistings.zap2it.com
+:method: POST
+:path: /api/user/login
+:scheme: https
+accept: */*
+accept-encoding: gzip, deflate, br
+accept-language: en-US,en;q=0.9
+cache-control: no-cache
+content-length: 89
+content-type: application/x-www-form-urlencoded; charset=UTF-8
+origin: https://tvlistings.zap2it.com
+pragma: no-cache
+referer: https://tvlistings.zap2it.com/?aid=gapzap
+user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36
+x-requested-with: XMLHttpRequest
+emailid: xxxx
+password: xxxx
+isfacebookuser: false
+usertype: 0
+objectid: 
+
+
+
+
+
+{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMDAwMDAxNDI3MCIsIm1lc3NhZ2UiOiIxMDAwMDAxNDI3MCIsIm5pY2tOYW1lIjoiZGFuaWVsIiwiaXNNdXNpYyI6dHJ1ZSwiaXNQUFYiOnRydWUsImlzSEQiOmZhbHNlLCJwcm9wZXJ0aWVzIjp7IjExMyI6IiIsIjk3NiI6IiIsIjIwMDIiOiIxMzA5MCIsIjIwMDMiOiJVU0EiLCIyMDA0IjoibGluZXVwSWQ6In0sImVtYWlsaWQiOiJkYW5pZWxAd2lkcmljay5uZXQiLCJuYW1lIjoiZGFuaWVsIiwiaWF0IjoxNTIyNTI2MjA1LCJleHAiOjE1MjUxMTgyMDV9.zmkfGS91MpNXa7KVJyDTtTY-jZFrdgx36jGmlHX3oi4",
+"message":"10000014270",
+"name":"daniel",
+"isMusic":true,
+"isPPV":true,
+"isHD":false,
+"IsNewUser":"0",
+"properties":{"113":"","976":"","2002":"13090","2003":"USA","2004":"lineupId:","HeadendName":""},"DSTUTCOffset":"-240","StdUTCOffset":"-300","DSTEnd":"2018-11-04T02:00Z","DSTStart":"2018-03-11T02:00Z"}
