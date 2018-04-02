@@ -1,3 +1,6 @@
 [creds]
 Username: example
 Password: examplePass
+[prefs]
+country: USA
+zipCode: 55555
