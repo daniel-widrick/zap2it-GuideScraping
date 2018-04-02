@@ -2,6 +2,8 @@
 import ConfigParser
 import urllib, urllib2
 import json
+import time
+import math
 
 
 Config = ConfigParser.ConfigParser()
@@ -25,3 +27,10 @@ zapVars = json.loads(response)
 
 zapToken = zapVars["token"]
 print("Token: " + zapToken)
+
+
+currentTimestamp = time.time()
+halfHourOffset = currentTimestamp % (60 * 30)
+closestTimestamp = currentTimestamp - halfHourOffset
+closestTimestamp = int(closestTimestamp)
+print("time stamp: " + str(closestTimestamp) )
