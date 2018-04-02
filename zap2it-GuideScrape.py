@@ -21,12 +21,13 @@ parameters = {
 }
 data = urllib.urlencode(parameters)
 req = urllib2.Request(url,data)
-response = urllib2.urlopen(req).read()
+response = ""
+#response = urllib2.urlopen(req).read()
 
-zapVars = json.loads(response)
+#zapVars = json.loads(response)
 
-zapToken = zapVars["token"]
-print("Token: " + zapToken)
+#zapToken = zapVars["token"]
+#print("Token: " + zapToken)
 
 
 currentTimestamp = time.time()
