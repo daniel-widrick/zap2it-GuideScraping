@@ -65,45 +65,53 @@ zapToken = "placeHolder"
 zapToken = zapVars["token"]
 
 
+
 #Find previous half hour from now()
 currentTimestamp = time.time()
 halfHourOffset = currentTimestamp % (60 * 30)
 closestTimestamp = currentTimestamp - halfHourOffset
 closestTimestamp = int(closestTimestamp)
-
-#build parameters for grid call
-parameters = {
-	'Activity_ID': 1,
-	'FromPage': "TV%20Guide",
-	'AffiliateId': "gapzap",
-	'token': zapToken,
-	'aid': 'gapzap',
-	'lineupId':'DFLTE',
-	'timespan':3,
-	'headendId': 'lineupId',
-	'country': Config.get("prefs","country"), 
-	'device': '-',
-	'postalCode': Config.get("prefs","zipCode"),
-	'isOverride': "true",
-	'time': closestTimestamp,
-	'pref': 'm,p',
-	'userId': '-'
-}
-data = urllib.urlencode(parameters)
-url = "https://tvlistings.zap2it.com/api/grid?" + data
-
-req = urllib2.Request(url)
-response = ""
-response = urllib2.urlopen(req).read()
-guide = json.loads(response)
-
+endTimestamp = closestTimestamp + (60*60*25)
 channelXML = ""
 programXML = ""
+addChannels = True
 
-for channel in guide["channels"]:
-	channelXML = channelXML + buildXMLChannel(channel)
-	for event in channel["events"]:
-		programXML = programXML + buildXMLProgram(event,channel["channelId"])
+while(closestTimestamp < endTimestamp):
+
+	print "Load guide for time: " + str(closestTimestamp)  + ' - ' + str(endTimestamp) + "\n"
+	#build parameters for grid call
+	parameters = {
+		'Activity_ID': 1,
+		'FromPage': "TV%20Guide",
+		'AffiliateId': "gapzap",
+		'token': zapToken,
+		'aid': 'gapzap',
+		'lineupId':'DFLTE',
+		'timespan':3,
+		'headendId': 'lineupId',
+		'country': Config.get("prefs","country"), 
+		'device': '-',
+		'postalCode': Config.get("prefs","zipCode"),
+		'isOverride': "true",
+		'time': closestTimestamp,
+		'pref': 'm,p',
+		'userId': '-'
+	}
+	data = urllib.urlencode(parameters)
+	url = "https://tvlistings.zap2it.com/api/grid?" + data
+	req = urllib2.Request(url)
+	response = ""
+	response = urllib2.urlopen(req).read()
+	guide = json.loads(response)
+	for channel in guide["channels"]:
+		if addChannels == True:
+			channelXML = channelXML + buildXMLChannel(channel)
+		for event in channel["events"]:
+			programXML = programXML + buildXMLProgram(event,channel["channelId"])
+	addChannels = False
+	closestTimestamp = closestTimestamp + (60*60*3)
+	print "Throttling api calls:...."
+	time.sleep(3)
 
 
 guideXML = '<?xml version="1.0" encoding="ISO-8859-1"?>' + "\n"
