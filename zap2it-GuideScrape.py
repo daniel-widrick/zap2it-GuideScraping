@@ -6,6 +6,36 @@ import json
 import time
 import math
 
+def buildXMLChannel(channel):
+	xml = ""
+	xml = xml + '    <channel id="' +  channel["channelId"] + '">' + "\n"
+	xml = xml + '      <display-name>' + channel["channelNo"] + " " + channel["callSign"] + '</display-name>' + "\n"
+	xml = xml + '      <display-name>' + channel["channelNo"] + '</display-name>' + "\n"
+	xml = xml + '      <display-name>' + channel["callSign"] + '</display-name>' + "\n"
+	xml = xml + '    </channel>' + "\n"
+	return xml
+
+def buildXMLProgram(event,channelId):
+	#2018-04-11T21:00:00Z
+	#20180408120000 +0000
+	xml = ""
+	xml = xml + '    <programme start="' + buildXMLDate(event["startTime"]) + '" '
+	xml = xml + 'stop="' + buildXMLDate(event["endTime"]) + ' channel="' + channelId + '">' + "\n"
+	xml = xml + '      <title lang="en">' + event["program"]["title"] + '</title>' + "\n"
+	if event["program"]["shortDesc"] is None:
+		event["program"]["shortDesc"] = "Unavailable"
+	xml = xml + '      <desc lang="en">' + event["program"]["shortDesc"] + '</desc>' + "\n"
+	xml = xml + '      <length units="minutes">' + event["duration"] + '</length>' + "\n"
+	
+	xml = xml + '    </programme>'
+	return xml
+
+def buildXMLDate(inputDateString):
+	outputDate = inputDateString.replace('-','')
+	outputDate = outputDate.replace('T','')
+	outputDate = outputDate.replace(':','')
+	outputDate = outputDate.replace('Z',' +0000')
+	return outputDate
 
 #Configuration loading
 Config = ConfigParser.ConfigParser()
@@ -60,3 +90,29 @@ parameters = {
 }
 data = urllib.urlencode(parameters)
 url = "https://tvlistings.zap2it.com/api/grid?" + data
+
+req = urllib2.Request(url)
+response = ""
+response = urllib2.urlopen(req).read()
+guide = json.loads(response)
+
+channelXML = ""
+programXML = ""
+
+for channel in guide["channels"]:
+	channelXML = channelXML + buildXMLChannel(channel)
+	for event in channel["events"]:
+		programXML = programXML + buildXMLProgram(event,channel["channelId"])
+
+guideXML = '<?xml version="1.0" encoding="ISO-8859-1"?>' + "\n"
+
+guideXML = guideXML + '<tv source-info-url="http://tvlistings.zap2it.com/" source-info-name="zap2it.com" generator-info-name="zap2it-GuideScraping" generator-info-url="daniel@widrick.net">' + "\n"
+
+guideXML = guideXML + channelXML
+guideXML = guideXML + programXML
+
+guideXML = guideXML + "\n" + '</tv>'
+
+print guideXML
+
+
