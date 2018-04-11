@@ -5,6 +5,7 @@ import urllib, urllib2
 import json
 import time
 import math
+import cgi
 
 def buildXMLChannel(channel):
 	xml = ""
@@ -20,14 +21,14 @@ def buildXMLProgram(event,channelId):
 	#20180408120000 +0000
 	xml = ""
 	xml = xml + '    <programme start="' + buildXMLDate(event["startTime"]) + '" '
-	xml = xml + 'stop="' + buildXMLDate(event["endTime"]) + ' channel="' + channelId + '">' + "\n"
-	xml = xml + '      <title lang="en">' + event["program"]["title"] + '</title>' + "\n"
+	xml = xml + 'stop="' + buildXMLDate(event["endTime"]) + '" channel="' + channelId + '">' + "\n"
+	xml = xml + '      <title lang="en">' + event["program"]["title"].replace('&','+') + '</title>' + "\n"
 	if event["program"]["shortDesc"] is None:
 		event["program"]["shortDesc"] = "Unavailable"
-	xml = xml + '      <desc lang="en">' + event["program"]["shortDesc"] + '</desc>' + "\n"
+	xml = xml + '      <desc lang="en">' + cgi.escape(event["program"]["shortDesc"]) + '</desc>' + "\n"
 	xml = xml + '      <length units="minutes">' + event["duration"] + '</length>' + "\n"
 	
-	xml = xml + '    </programme>'
+	xml = xml + '    </programme>'+"\n"
 	return xml
 
 def buildXMLDate(inputDateString):
@@ -104,6 +105,7 @@ for channel in guide["channels"]:
 	for event in channel["events"]:
 		programXML = programXML + buildXMLProgram(event,channel["channelId"])
 
+
 guideXML = '<?xml version="1.0" encoding="ISO-8859-1"?>' + "\n"
 
 guideXML = guideXML + '<tv source-info-url="http://tvlistings.zap2it.com/" source-info-name="zap2it.com" generator-info-name="zap2it-GuideScraping" generator-info-url="daniel@widrick.net">' + "\n"
@@ -113,6 +115,6 @@ guideXML = guideXML + programXML
 
 guideXML = guideXML + "\n" + '</tv>'
 
-print guideXML
-
-
+file = open("xmlguide.xmltv","w")
+file.write(guideXML.encode('utf8'))
+file.close()
