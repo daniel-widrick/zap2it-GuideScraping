@@ -108,7 +108,7 @@ zapToken = zapVars["token"]
 
 
 #Find previous half hour from now()
-currentTimestamp = time.time()
+currentTimestamp = time.time() - 60 * 60 * 24
 halfHourOffset = currentTimestamp % (60 * 30)
 closestTimestamp = currentTimestamp - halfHourOffset
 closestTimestamp = int(closestTimestamp)
