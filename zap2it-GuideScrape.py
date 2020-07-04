@@ -1,11 +1,18 @@
+"""
+Forked from https://github.com/daniel-widrick/zap2it-GuideScraping
+All credit goes to daniel-widrick.
 
+Updated to use python3. Switching to python3 improved CPU usage and reduced A
+processing time to generate xmlguide.xmltv.
+"""
 #Required libraries
-import ConfigParser
-import urllib, urllib2
+import configparser
+import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse
 import json
 import time
 import math
 import cgi
+import html
 
 def sanitizeData(data):
 	#https://stackoverflow.com/questions/1091945/what-characters-do-i-need-to-escape-in-xml-documents
@@ -35,7 +42,7 @@ def buildXMLProgram(event,channelId):
 		xml = xml + '      <sub-title lang="en">' + sanitizeData(event["program"]["episodeTitle"]) + ' </sub-title>' + "\n"
 	if event["program"]["shortDesc"] is None:
 		event["program"]["shortDesc"] = "Unavailable"
-	xml = xml + '      <desc lang="en">' + cgi.escape(event["program"]["shortDesc"]) + '</desc>' + "\n"
+	xml = xml + '      <desc lang="en">' + html.escape(event["program"]["shortDesc"]) + '</desc>' + "\n"
 	xml = xml + '      <length units="minutes">' + sanitizeData(event["duration"]) + '</length>' + "\n"
 	for category in event["filter"]:
 		xml = xml + '      <category>' + sanitizeData(category.replace('filter-','')) + '</category>' + "\n"
@@ -56,7 +63,7 @@ def buildXMLProgram(event,channelId):
 		if event["program"]["id"] is not None:
 			episodeid = str(event["program"]["id"])
 	except KeyError:
-		print "no season for:" + event["program"]["title"]
+		print("no season for:" + event["program"]["title"])
 		
 	#print season + "." + episode
 	if int(season) < 10:
@@ -80,7 +87,7 @@ def buildXMLDate(inputDateString):
 	return outputDate
 
 #Configuration loading
-Config = ConfigParser.ConfigParser()
+Config = configparser.ConfigParser()
 Config
 Config.read("./zap2itconfig.ini")
 
@@ -93,12 +100,13 @@ parameters = {
 	'usertype': 0,
 	'objectid': ''
 }
-data = urllib.urlencode(parameters)
-req = urllib2.Request(url,data)
+data = urllib.parse.urlencode(parameters)
+data = data.encode('ascii') # data should be bytes
+req = urllib.request.Request(url,data)
 
 #Load Authentication resposne from server
 response = ""
-response = urllib2.urlopen(req).read()
+response = urllib.request.urlopen(req).read()
 zapVars = json.loads(response)
 
 #Save authentication token from server
@@ -119,7 +127,7 @@ addChannels = True
 
 while(closestTimestamp < endTimestamp):
 
-	print "Load guide for time: " + str(closestTimestamp)  + ' - ' + str(endTimestamp) + "\n"
+	print("Load guide for time: " + str(closestTimestamp)  + ' - ' + str(endTimestamp) + "\n")
 	#build parameters for grid call
 	parameters = {
 		'Activity_ID': 1,
@@ -138,11 +146,11 @@ while(closestTimestamp < endTimestamp):
 		'pref': 'm,p',
 		'userId': '-'
 	}
-	data = urllib.urlencode(parameters)
+	data = urllib.parse.urlencode(parameters)
 	url = "https://tvlistings.zap2it.com/api/grid?" + data
-	req = urllib2.Request(url)
+	req = urllib.request.Request(url)
 	response = ""
-	response = urllib2.urlopen(req).read()
+	response = urllib.request.urlopen(req).read()
 	guide = json.loads(response)
 	for channel in guide["channels"]:
 		if addChannels == True:
@@ -151,7 +159,7 @@ while(closestTimestamp < endTimestamp):
 			programXML = programXML + buildXMLProgram(event,channel["channelId"])
 	addChannels = False
 	closestTimestamp = closestTimestamp + (60*60*3)
-	print "Throttling api calls:...."
+	print("Throttling api calls:....")
 	#time.sleep(.25)
 
 
@@ -166,6 +174,6 @@ guideXML = guideXML + "\n" + '</tv>'
 
 
 
-file = open("xmlguide.xmltv","w")
+file = open("xmlguide.xmltv","wb")
 file.write(guideXML.encode('utf8'))
 file.close()
