@@ -1,8 +1,13 @@
+"""
+Forked from https://github.com/daniel-widrick/zap2it-GuideScraping
+All credit goes to daniel-widrick.
 
+Updated to use python3. Switching to python3 improved CPU usage and reduced A
+processing time to generate xmlguide.xmltv.
+"""
 #Required libraries
 import configparser
-import urllib
-from urllib.request import urlopen
+import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse
 import json
 import time
 import math
@@ -94,7 +99,8 @@ parameters = {
 	'usertype': 0,
 	'objectid': ''
 }
-data = str.encode(urllib.parse.urlencode(parameters))
+data = urllib.parse.urlencode(parameters)
+data = data.encode('ascii') # data should be bytes
 req = urllib.request.Request(url,data)
 
 #Load Authentication resposne from server
@@ -165,8 +171,6 @@ guideXML = guideXML + programXML
 
 guideXML = guideXML + "\n" + '</tv>'
 
-
-
-file = open("xmlguide.xmltv","w")
-file.write(guideXML)
+file = open("xmlguide.xmltv","wb")
+file.write(guideXML.encode('utf8'))
 file.close()
