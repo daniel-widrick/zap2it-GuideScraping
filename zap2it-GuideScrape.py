@@ -11,7 +11,6 @@ import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error,
 import json
 import time
 import math
-import cgi
 import html
 
 def sanitizeData(data):
@@ -116,7 +115,7 @@ zapToken = zapVars["token"]
 
 
 #Find previous half hour from now()
-currentTimestamp = time.time()
+currentTimestamp = time.time() - 60 * 60 * 24
 halfHourOffset = currentTimestamp % (60 * 30)
 closestTimestamp = currentTimestamp - halfHourOffset
 closestTimestamp = int(closestTimestamp)
@@ -171,8 +170,6 @@ guideXML = guideXML + channelXML
 guideXML = guideXML + programXML
 
 guideXML = guideXML + "\n" + '</tv>'
-
-
 
 file = open("xmlguide.xmltv","wb")
 file.write(guideXML.encode('utf8'))
