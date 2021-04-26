@@ -14,6 +14,8 @@ import math
 import html
 #Additional Libraries for Parameter Parsing
 import sys, getopt
+#Libraries for historical copies
+import datetime
 
 def sanitizeData(data):
 	#https://stackoverflow.com/questions/1091945/what-characters-do-i-need-to-escape-in-xml-documents
@@ -103,7 +105,7 @@ for opt, arg in opts:
 	elif opt in ("-i","--ifile"):
 		optConfigFile = arg
 	elif opt in ("-o","--ofile"):
-		outGuideFile = arg
+		optGuideFile = arg
 print("Loading config: ", optConfigFile, " and outputting: ", optGuideFile)
 
  
@@ -199,3 +201,13 @@ guideXML = guideXML + "\n" + '</tv>'
 file = open(optGuideFile,"wb")
 file.write(guideXML.encode('utf8'))
 file.close()
+
+#Write a Copy of the file with the current timestamp
+dateTimeObj = datetime.datetime.now()
+timestampStr = "." + dateTimeObj.strftime("%Y%m%d%H%M%s") + '.xmltv'
+histGuideFile = timestampStr.join(optGuideFile.rsplit('.xmltv',1))
+file = open(histGuideFile,"wb")
+file.write(guideXML.encode('utf8'))
+file.close()
+
+#TODO Clean old files?
