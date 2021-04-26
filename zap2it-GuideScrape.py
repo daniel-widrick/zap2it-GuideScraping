@@ -153,7 +153,7 @@ addChannels = True
 
 while(closestTimestamp < endTimestamp):
 
-	print("Load guide for time: " + str(closestTimestamp)  + ' - ' + str(endTimestamp) + "\n")
+	print("Load guide for time: " + str(closestTimestamp)  + ' - ' + str(endTimestamp))
 	#build parameters for grid call
 	parameters = {
 		'Activity_ID': 1,
@@ -185,9 +185,6 @@ while(closestTimestamp < endTimestamp):
 			programXML = programXML + buildXMLProgram(event,channel["channelId"])
 	addChannels = False
 	closestTimestamp = closestTimestamp + (60*60*3)
-	print("Throttling api calls:....")
-	#time.sleep(.25)
-
 
 guideXML = '<?xml version="1.0" encoding="ISO-8859-1"?>' + "\n"
 
