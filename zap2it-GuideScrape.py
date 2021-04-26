@@ -12,6 +12,8 @@ import json
 import time
 import math
 import html
+#Additional Libraries for Parameter Parsing
+import sys, getopt
 
 def sanitizeData(data):
 	#https://stackoverflow.com/questions/1091945/what-characters-do-i-need-to-escape-in-xml-documents
@@ -85,10 +87,33 @@ def buildXMLDate(inputDateString):
 	outputDate = outputDate.replace('Z',' +0000')
 	return outputDate
 
+#Add Paramter options for config file and guide file
+optConfigFile = './xap2itconfig.ini'
+optGuideFile = 'xmlguide.xmltv'
+try:
+	opts, args = getopt.getopt(sys.argv[1:],"hi:o:",["ifile=","ofile="])
+except getopt.GetoptError:
+	print("zap2it-GuideScrape.py [-i <inputfile> ] [-o <outputfile>]")
+	sys.exit()
+
+for opt, arg in opts:
+	if opt == '-h':
+		print("zap2it-GuideScrape.py [-i <inputfile> ] [-o <outputfile>]")
+		sys.exit()
+	elif opt in ("-i","--ifile"):
+		optConfigFile = arg
+	elif opt in ("-o","--ofile"):
+		outGuideFile = arg
+print("Loading config: ", optConfigFile, " and outputting: ", optGuideFile)
+
+ 
+
+
+
 #Configuration loading
 Config = configparser.ConfigParser()
 Config
-Config.read("./zap2itconfig.ini")
+Config.read(optConfigFile)
 
 #Build authentication request
 url = 'https://tvlistings.zap2it.com/api/user/login'
@@ -171,6 +196,6 @@ guideXML = guideXML + programXML
 
 guideXML = guideXML + "\n" + '</tv>'
 
-file = open("xmlguide.xmltv","wb")
+file = open(optGuideFile,"wb")
 file.write(guideXML.encode('utf8'))
 file.close()
