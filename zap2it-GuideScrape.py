@@ -15,7 +15,7 @@ import html
 #Additional Libraries for Parameter Parsing
 import sys, getopt
 #Libraries for historical copies
-import datetime
+import datetime, os
 
 def sanitizeData(data):
 	#https://stackoverflow.com/questions/1091945/what-characters-do-i-need-to-escape-in-xml-documents
@@ -106,16 +106,14 @@ for opt, arg in opts:
 		optConfigFile = arg
 	elif opt in ("-o","--ofile"):
 		optGuideFile = arg
+
 print("Loading config: ", optConfigFile, " and outputting: ", optGuideFile)
-
- 
-
-
 
 #Configuration loading
 Config = configparser.ConfigParser()
 Config
 Config.read(optConfigFile)
+
 
 #Build authentication request
 url = 'https://tvlistings.zap2it.com/api/user/login'
@@ -207,4 +205,11 @@ file = open(histGuideFile,"wb")
 file.write(guideXML.encode('utf8'))
 file.close()
 
-#TODO Clean old files?
+#Clean old files
+outputFilePath = os.path.abspath(optGuideFile)
+outputDir = os.path.dirname(outputFilePath)
+for item in os.listdir(outputDir):
+	fileName = os.path.join(outputDir,item)
+	if os.path.isfile(fileName) & item.endswith('.xmltv') & (os.stat(fileName).st_mtime < time.time() - (int(Config.get("prefs","historicalGuideDays")) * 86400)):
+		os.remove(fileName)
+sys.exit()

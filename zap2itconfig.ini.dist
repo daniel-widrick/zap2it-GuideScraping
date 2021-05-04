@@ -4,3 +4,4 @@ Password: examplePass
 [prefs]
 country: USA
 zipCode: 55555
+historicalGuideDays: 14
