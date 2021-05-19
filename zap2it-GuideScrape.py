@@ -53,6 +53,10 @@ def buildXMLProgram(event,channelId):
 	if event["thumbnail"] is not None:
 		xml = xml + '      <thumbnail>http://zap2it.tmsimg.com/assets/' + event["thumbnail"] + '.jpg</thumbnail>' + "\n"
 		xml = xml + '      <icon src="http://zap2it.tmsimg.com/assets/' + event["thumbnail"] + '.jpg" />' + "\n"
+	if event["rating"] is not None:
+		xml = xml + '      <rating>' + "\n"
+		xml = xml + '           <value>' + event["rating"] + '</value>' + "\n"
+		xml = xml + '      </rating>' + "\n"
 	xml = xml + '      <subtitles type="teletext" />' + "\n"
 	season = "0"
 	episode = "0"
