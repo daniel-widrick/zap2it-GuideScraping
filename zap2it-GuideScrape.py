@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Forked from https://github.com/daniel-widrick/zap2it-GuideScraping
 All credit goes to daniel-widrick.
@@ -40,17 +41,23 @@ def buildXMLProgram(event,channelId):
 	xml = ""
 	xml = xml + '    <programme start="' + buildXMLDate(event["startTime"]) + '" '
 	xml = xml + 'stop="' + buildXMLDate(event["endTime"]) + '" channel="' + sanitizeData(channelId) + '">' + "\n"
-	xml = xml + '      <title lang="en">' + sanitizeData(event["program"]["title"]) + '</title>' + "\n"
+	xml = xml + '      <title lang="' + optLanguage + '">' + sanitizeData(event["program"]["title"]) + '</title>' + "\n"
 	if event["program"]["episodeTitle"] is not None:
-		xml = xml + '      <sub-title lang="en">' + sanitizeData(event["program"]["episodeTitle"]) + ' </sub-title>' + "\n"
+		xml = xml + '      <sub-title lang="' + optLanguage + '">' + sanitizeData(event["program"]["episodeTitle"]) + ' </sub-title>' + "\n"
 	if event["program"]["shortDesc"] is None:
 		event["program"]["shortDesc"] = "Unavailable"
-	xml = xml + '      <desc lang="en">' + html.escape(event["program"]["shortDesc"]) + '</desc>' + "\n"
+	xml = xml + '      <desc lang="' + optLanguage + '">' + html.escape(event["program"]["shortDesc"]) + '</desc>' + "\n"
 	xml = xml + '      <length units="minutes">' + sanitizeData(event["duration"]) + '</length>' + "\n"
 	for category in event["filter"]:
 		xml = xml + '      <category>' + sanitizeData(category.replace('filter-','')) + '</category>' + "\n"
 	if event["thumbnail"] is not None:
-		xml = xml + '  <thumbnail>http://zap2it.tmsimg.com/assets/' + event["thumbnail"] + '.jpg</thumbnail>' + "\n"
+		xml = xml + '      <thumbnail>http://zap2it.tmsimg.com/assets/' + event["thumbnail"] + '.jpg</thumbnail>' + "\n"
+		xml = xml + '      <icon src="http://zap2it.tmsimg.com/assets/' + event["thumbnail"] + '.jpg" />' + "\n"
+	if event["rating"] is not None:
+		xml = xml + '      <rating>' + "\n"
+		xml = xml + '           <value>' + event["rating"] + '</value>' + "\n"
+		xml = xml + '      </rating>' + "\n"
+	xml = xml + '      <subtitles type="teletext" />' + "\n"
 	season = "0"
 	episode = "0"
 	episodeid = ""
@@ -69,15 +76,17 @@ def buildXMLProgram(event,channelId):
 		print("no season for:" + event["program"]["title"])
 		
 	#print season + "." + episode
-	if int(season) < 10:
-		season = "0" + str(season)
-	if int(episode) < 10:
-		episode = "0" + str(episode)
-	xml = xml + '<episode-num system="SxxExx">S' + season + "E" + episode + "</episode-num>"
+	if ((int(season) != 0) and (int(episode) != 0)):
+		if int(season) < 10:
+			season = "0" + str(season)
+		if int(episode) < 10:
+			episode = "0" + str(episode)
+		xml = xml + '      <episode-num system="SxxExx">S' + season + "E" + episode + "</episode-num>" + "\n"
+		xml = xml + '      <episode-num system="common">S' + season + "E" + episode + "</episode-num>" + "\n"
 
 	showid = event["seriesId"].replace('SH','')
 	episodeid = episodeid.replace('EP' + showid,'')
-	xml = xml + '<episode-num system="dd_progid">EP' + sanitizeData(showid + '.' + episodeid) + '</episode-num>'
+	xml = xml + '      <episode-num system="dd_progid">EP' + sanitizeData(showid + '.' + episodeid) + '</episode-num>' + "\n"
 	
 	xml = xml + '    </programme>'+"\n"
 	return xml
@@ -92,10 +101,11 @@ def buildXMLDate(inputDateString):
 #Add Paramter options for config file and guide file
 optConfigFile = './xap2itconfig.ini'
 optGuideFile = 'xmlguide.xmltv'
+optLanguage = 'en'
 try:
-	opts, args = getopt.getopt(sys.argv[1:],"hi:o:",["ifile=","ofile="])
+	opts, args = getopt.getopt(sys.argv[1:],"hi:o:l:",["ifile=","ofile=","language="])
 except getopt.GetoptError:
-	print("zap2it-GuideScrape.py [-i <inputfile> ] [-o <outputfile>]")
+	print("zap2it-GuideScrape.py [-i <inputfile> ] [-o <outputfile>] [-l <language>")
 	sys.exit()
 
 for opt, arg in opts:
@@ -106,6 +116,8 @@ for opt, arg in opts:
 		optConfigFile = arg
 	elif opt in ("-o","--ofile"):
 		optGuideFile = arg
+	elif opt in ("-l","--language"):
+		optLanguage = arg
 
 print("Loading config: ", optConfigFile, " and outputting: ", optGuideFile)
 
@@ -184,14 +196,15 @@ while(closestTimestamp < endTimestamp):
 	addChannels = False
 	closestTimestamp = closestTimestamp + (60*60*3)
 
-guideXML = '<?xml version="1.0" encoding="ISO-8859-1"?>' + "\n"
+guideXML = '<?xml version="1.0" encoding="UTF-8"?>' + "\n"
+guideXML = guideXML + '<!DOCTYPE tv SYSTEM "xmltv.dtd">' + "\n"
 
 guideXML = guideXML + '<tv source-info-url="http://tvlistings.zap2it.com/" source-info-name="zap2it.com" generator-info-name="zap2it-GuideScraping" generator-info-url="daniel@widrick.net">' + "\n"
 
 guideXML = guideXML + channelXML
 guideXML = guideXML + programXML
 
-guideXML = guideXML + "\n" + '</tv>'
+guideXML = guideXML + '</tv>' + "\n"
 
 file = open(optGuideFile,"wb")
 file.write(guideXML.encode('utf8'))
