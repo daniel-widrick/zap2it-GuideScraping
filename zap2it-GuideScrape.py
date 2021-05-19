@@ -51,7 +51,7 @@ def buildXMLProgram(event,channelId):
 	for category in event["filter"]:
 		xml = xml + '      <category>' + sanitizeData(category.replace('filter-','')) + '</category>' + "\n"
 	if event["thumbnail"] is not None:
-		xml = xml + '  <thumbnail>http://zap2it.tmsimg.com/assets/' + event["thumbnail"] + '.jpg</thumbnail>' + "\n"
+		xml = xml + '      <thumbnail>http://zap2it.tmsimg.com/assets/' + event["thumbnail"] + '.jpg</thumbnail>' + "\n"
 	season = "0"
 	episode = "0"
 	episodeid = ""
@@ -74,11 +74,11 @@ def buildXMLProgram(event,channelId):
 		season = "0" + str(season)
 	if int(episode) < 10:
 		episode = "0" + str(episode)
-	xml = xml + '<episode-num system="SxxExx">S' + season + "E" + episode + "</episode-num>"
+	xml = xml + '      <episode-num system="SxxExx">S' + season + "E" + episode + "</episode-num>" + "\n"
 
 	showid = event["seriesId"].replace('SH','')
 	episodeid = episodeid.replace('EP' + showid,'')
-	xml = xml + '<episode-num system="dd_progid">EP' + sanitizeData(showid + '.' + episodeid) + '</episode-num>'
+	xml = xml + '      <episode-num system="dd_progid">EP' + sanitizeData(showid + '.' + episodeid) + '</episode-num>' + "\n"
 	
 	xml = xml + '    </programme>'+"\n"
 	return xml
@@ -188,14 +188,15 @@ while(closestTimestamp < endTimestamp):
 	addChannels = False
 	closestTimestamp = closestTimestamp + (60*60*3)
 
-guideXML = '<?xml version="1.0" encoding="ISO-8859-1"?>' + "\n"
+guideXML = '<?xml version="1.0" encoding="UTF-8"?>' + "\n"
+guideXML = guideXML + '<!DOCTYPE tv SYSTEM "xmltv.dtd">' + "\n"
 
 guideXML = guideXML + '<tv source-info-url="http://tvlistings.zap2it.com/" source-info-name="zap2it.com" generator-info-name="zap2it-GuideScraping" generator-info-url="daniel@widrick.net">' + "\n"
 
 guideXML = guideXML + channelXML
 guideXML = guideXML + programXML
 
-guideXML = guideXML + "\n" + '</tv>'
+guideXML = guideXML + '</tv>' + "\n"
 
 file = open(optGuideFile,"wb")
 file.write(guideXML.encode('utf8'))
