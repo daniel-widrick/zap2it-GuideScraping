@@ -52,6 +52,8 @@ def buildXMLProgram(event,channelId):
 		xml = xml + '      <category>' + sanitizeData(category.replace('filter-','')) + '</category>' + "\n"
 	if event["thumbnail"] is not None:
 		xml = xml + '      <thumbnail>http://zap2it.tmsimg.com/assets/' + event["thumbnail"] + '.jpg</thumbnail>' + "\n"
+		xml = xml + '      <icon src="http://zap2it.tmsimg.com/assets/' + event["thumbnail"] + '.jpg" />' + "\n"
+	xml = xml + '      <subtitles type="teletext" />' + "\n"
 	season = "0"
 	episode = "0"
 	episodeid = ""
@@ -70,11 +72,13 @@ def buildXMLProgram(event,channelId):
 		print("no season for:" + event["program"]["title"])
 		
 	#print season + "." + episode
-	if int(season) < 10:
-		season = "0" + str(season)
-	if int(episode) < 10:
-		episode = "0" + str(episode)
-	xml = xml + '      <episode-num system="SxxExx">S' + season + "E" + episode + "</episode-num>" + "\n"
+	if ((int(season) != 0) and (int(episode) != 0)):
+		if int(season) < 10:
+			season = "0" + str(season)
+		if int(episode) < 10:
+			episode = "0" + str(episode)
+		xml = xml + '      <episode-num system="SxxExx">S' + season + "E" + episode + "</episode-num>" + "\n"
+		xml = xml + '      <episode-num system="common">S' + season + "E" + episode + "</episode-num>" + "\n"
 
 	showid = event["seriesId"].replace('SH','')
 	episodeid = episodeid.replace('EP' + showid,'')
