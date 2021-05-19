@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Forked from https://github.com/daniel-widrick/zap2it-GuideScraping
 All credit goes to daniel-widrick.
@@ -40,12 +41,12 @@ def buildXMLProgram(event,channelId):
 	xml = ""
 	xml = xml + '    <programme start="' + buildXMLDate(event["startTime"]) + '" '
 	xml = xml + 'stop="' + buildXMLDate(event["endTime"]) + '" channel="' + sanitizeData(channelId) + '">' + "\n"
-	xml = xml + '      <title lang="en">' + sanitizeData(event["program"]["title"]) + '</title>' + "\n"
+	xml = xml + '      <title lang="' + optLanguage + '">' + sanitizeData(event["program"]["title"]) + '</title>' + "\n"
 	if event["program"]["episodeTitle"] is not None:
-		xml = xml + '      <sub-title lang="en">' + sanitizeData(event["program"]["episodeTitle"]) + ' </sub-title>' + "\n"
+		xml = xml + '      <sub-title lang="' + optLanguage + '">' + sanitizeData(event["program"]["episodeTitle"]) + ' </sub-title>' + "\n"
 	if event["program"]["shortDesc"] is None:
 		event["program"]["shortDesc"] = "Unavailable"
-	xml = xml + '      <desc lang="en">' + html.escape(event["program"]["shortDesc"]) + '</desc>' + "\n"
+	xml = xml + '      <desc lang="' + optLanguage + '">' + html.escape(event["program"]["shortDesc"]) + '</desc>' + "\n"
 	xml = xml + '      <length units="minutes">' + sanitizeData(event["duration"]) + '</length>' + "\n"
 	for category in event["filter"]:
 		xml = xml + '      <category>' + sanitizeData(category.replace('filter-','')) + '</category>' + "\n"
@@ -92,10 +93,11 @@ def buildXMLDate(inputDateString):
 #Add Paramter options for config file and guide file
 optConfigFile = './xap2itconfig.ini'
 optGuideFile = 'xmlguide.xmltv'
+optLanguage = 'en'
 try:
-	opts, args = getopt.getopt(sys.argv[1:],"hi:o:",["ifile=","ofile="])
+    opts, args = getopt.getopt(sys.argv[1:],"hi:o:l:",["ifile=","ofile=","language="])
 except getopt.GetoptError:
-	print("zap2it-GuideScrape.py [-i <inputfile> ] [-o <outputfile>]")
+	print("zap2it-GuideScrape.py [-i <inputfile> ] [-o <outputfile>] [-l <language>")
 	sys.exit()
 
 for opt, arg in opts:
@@ -106,6 +108,8 @@ for opt, arg in opts:
 		optConfigFile = arg
 	elif opt in ("-o","--ofile"):
 		optGuideFile = arg
+	elif opt in ("-l","--language"):
+		optLanguage = arg
 
 print("Loading config: ", optConfigFile, " and outputting: ", optGuideFile)
 
