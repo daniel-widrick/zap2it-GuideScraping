@@ -43,17 +43,13 @@ def buildXMLProgram(event,channelId):
 	if event["program"]["shortDesc"] is None:
 		event["program"]["shortDesc"] = "Unavailable"
 	xml = xml + "\t\t" + '<desc lang="' + optLanguage + '">' + html.unescape(event["program"]["shortDesc"]) + '</desc>' + "\n"
-	xml = xml + "\t\t" + '<length units="minutes">' + html.unescape(event["duration"]) + '</length>' + "\n"
 	for category in event["filter"]:
 		xml = xml + "\t\t" + '<category>' + html.unescape(category.replace('filter-','')) + '</category>' + "\n"
+	xml = xml + "\t\t" + '<length units="minutes">' + html.unescape(event["duration"]) + '</length>' + "\n"
 	if event["thumbnail"] is not None:
 		xml = xml + "\t\t" + '<thumbnail>http://zap2it.tmsimg.com/assets/' + event["thumbnail"] + '.jpg</thumbnail>' + "\n"
 		xml = xml + "\t\t" + '<icon src="http://zap2it.tmsimg.com/assets/' + event["thumbnail"] + '.jpg" />' + "\n"
-	if event["rating"] is not None:
-		xml = xml + "\t\t" + '<rating>' + "\n"
-		xml = xml + "\t\t\t" + '<value>' + event["rating"] + '</value>' + "\n"
-		xml = xml + "\t\t" + '</rating>' + "\n"
-	xml = xml + "\t\t" + '<subtitles type="teletext" />' + "\n"
+
 	season = "0"
 	episode = "0"
 	episodeid = ""
@@ -83,6 +79,12 @@ def buildXMLProgram(event,channelId):
 	showid = event["seriesId"].replace('SH','')
 	episodeid = episodeid.replace('EP' + showid,'')
 	xml = xml + "\t\t" + '<episode-num system="dd_progid">EP' + html.unescape(showid + '.' + episodeid) + '</episode-num>' + "\n"
+
+	xml = xml + "\t\t" + '<subtitles type="teletext" />' + "\n"
+	if event["rating"] is not None:
+		xml = xml + "\t\t" + '<rating>' + "\n"
+		xml = xml + "\t\t\t" + '<value>' + event["rating"] + '</value>' + "\n"
+		xml = xml + "\t\t" + '</rating>' + "\n"
 	
 	xml = xml + "\t" + '</programme>'+"\n"
 	return xml
