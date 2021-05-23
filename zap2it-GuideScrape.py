@@ -18,20 +18,12 @@ import sys, getopt
 #Libraries for historical copies
 import datetime, os
 
-def sanitizeData(data):
-	#https://stackoverflow.com/questions/1091945/what-characters-do-i-need-to-escape-in-xml-documents
-	sData = data.replace('"','&quot;')
-	sData = sData.replace("'",'&apos;')
-	sData = sData.replace('<','&lt;')
-	sData = sData.replace('<','&gt;')
-	sData = sData.replace('&','&amp;')
-	return sData;
 def buildXMLChannel(channel):
 	xml = ""
-	xml = xml + '    <channel id="' +  sanitizeData(channel["channelId"]) + '">' + "\n"
-	xml = xml + '      <display-name>' + sanitizeData(channel["channelNo"] + " " + channel["callSign"]) + '</display-name>' + "\n"
-	xml = xml + '      <display-name>' + sanitizeData(channel["channelNo"]) + '</display-name>' + "\n"
-	xml = xml + '      <display-name>' + sanitizeData(channel["callSign"]) + '</display-name>' + "\n"
+	xml = xml + '    <channel id="' +  html.unescape(channel["channelId"]) + '">' + "\n"
+	xml = xml + '      <display-name>' + html.unescape(channel["channelNo"] + " " + channel["callSign"]) + '</display-name>' + "\n"
+	xml = xml + '      <display-name>' + html.unescape(channel["channelNo"]) + '</display-name>' + "\n"
+	xml = xml + '      <display-name>' + html.unescape(channel["callSign"]) + '</display-name>' + "\n"
 	xml = xml + '    </channel>' + "\n"
 	return xml
 
@@ -40,16 +32,16 @@ def buildXMLProgram(event,channelId):
 	#20180408120000 +0000
 	xml = ""
 	xml = xml + '    <programme start="' + buildXMLDate(event["startTime"]) + '" '
-	xml = xml + 'stop="' + buildXMLDate(event["endTime"]) + '" channel="' + sanitizeData(channelId) + '">' + "\n"
-	xml = xml + '      <title lang="' + optLanguage + '">' + sanitizeData(event["program"]["title"]) + '</title>' + "\n"
+	xml = xml + 'stop="' + buildXMLDate(event["endTime"]) + '" channel="' + html.unescape(channelId) + '">' + "\n"
+	xml = xml + '      <title lang="' + optLanguage + '">' + html.unescape(event["program"]["title"]) + '</title>' + "\n"
 	if event["program"]["episodeTitle"] is not None:
-		xml = xml + '      <sub-title lang="' + optLanguage + '">' + sanitizeData(event["program"]["episodeTitle"]) + ' </sub-title>' + "\n"
+		xml = xml + '      <sub-title lang="' + optLanguage + '">' + html.unescape(event["program"]["episodeTitle"]) + ' </sub-title>' + "\n"
 	if event["program"]["shortDesc"] is None:
 		event["program"]["shortDesc"] = "Unavailable"
-	xml = xml + '      <desc lang="' + optLanguage + '">' + html.escape(event["program"]["shortDesc"]) + '</desc>' + "\n"
-	xml = xml + '      <length units="minutes">' + sanitizeData(event["duration"]) + '</length>' + "\n"
+	xml = xml + '      <desc lang="' + optLanguage + '">' + html.unescape(event["program"]["shortDesc"]) + '</desc>' + "\n"
+	xml = xml + '      <length units="minutes">' + html.unescape(event["duration"]) + '</length>' + "\n"
 	for category in event["filter"]:
-		xml = xml + '      <category>' + sanitizeData(category.replace('filter-','')) + '</category>' + "\n"
+		xml = xml + '      <category>' + html.unescape(category.replace('filter-','')) + '</category>' + "\n"
 	if event["thumbnail"] is not None:
 		xml = xml + '      <thumbnail>http://zap2it.tmsimg.com/assets/' + event["thumbnail"] + '.jpg</thumbnail>' + "\n"
 		xml = xml + '      <icon src="http://zap2it.tmsimg.com/assets/' + event["thumbnail"] + '.jpg" />' + "\n"
@@ -86,7 +78,7 @@ def buildXMLProgram(event,channelId):
 
 	showid = event["seriesId"].replace('SH','')
 	episodeid = episodeid.replace('EP' + showid,'')
-	xml = xml + '      <episode-num system="dd_progid">EP' + sanitizeData(showid + '.' + episodeid) + '</episode-num>' + "\n"
+	xml = xml + '      <episode-num system="dd_progid">EP' + html.unescape(showid + '.' + episodeid) + '</episode-num>' + "\n"
 	
 	xml = xml + '    </programme>'+"\n"
 	return xml
