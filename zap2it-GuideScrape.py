@@ -24,10 +24,6 @@ def buildXMLChannel(channel):
 	xml = xml + "\t\t" + '<display-name>' + html.unescape(channel["channelNo"] + " " + channel["callSign"]) + '</display-name>' + "\n"
 	xml = xml + "\t\t" + '<display-name>' + html.unescape(channel["channelNo"]) + '</display-name>' + "\n"
 	xml = xml + "\t\t" + '<display-name>' + html.unescape(channel["callSign"]) + '</display-name>' + "\n"
-#	if channel["logoURL"] is not None:
-#		xml = xml + "\t\t" + '<icon src="' + html.unescape(channel["logoURL"]) + '" />' + "\n"
-#	if channel["name"] is not None:
-#		xml = xml + "\t\t" + '<icon src="' + html.unescape(channel["name"]) + '" />' + "\n"
 	xml = xml + "\t" + '</channel>' + "\n"
 	return xml
 
@@ -39,7 +35,7 @@ def buildXMLProgram(event,channelId):
 	xml = xml + 'stop="' + buildXMLDate(event["endTime"]) + '" channel="' + html.unescape(channelId) + '">' + "\n"
 	xml = xml + "\t\t" + '<title lang="' + optLanguage + '">' + html.unescape(event["program"]["title"]) + '</title>' + "\n"
 	if event["program"]["episodeTitle"] is not None:
-		xml = xml + "\t\t" + '<sub-title lang="' + optLanguage + '">' + html.unescape(event["program"]["episodeTitle"]) + ' </sub-title>' + "\n"
+		xml = xml + "\t\t" + '<sub-title lang="' + optLanguage + '">' + html.unescape(event["program"]["episodeTitle"]) + '</sub-title>' + "\n"
 	if event["program"]["shortDesc"] is None:
 		event["program"]["shortDesc"] = "Unavailable"
 	xml = xml + "\t\t" + '<desc lang="' + optLanguage + '">' + html.unescape(event["program"]["shortDesc"]) + '</desc>' + "\n"
@@ -203,9 +199,6 @@ guideXML = guideXML + '</tv>' + "\n"
 file = open(optGuideFile,"wb")
 file.write(guideXML.encode('utf8'))
 file.close()
-#file = open("xmlguide.xmltv.raw","wb")
-#file.write(guide.encode('utf8'))
-#file.close()
 
 #Write a Copy of the file with the current timestamp
 dateTimeObj = datetime.datetime.now()
