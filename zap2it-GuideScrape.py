@@ -20,36 +20,40 @@ import datetime, os
 
 def buildXMLChannel(channel):
 	xml = ""
-	xml = xml + '    <channel id="' +  html.unescape(channel["channelId"]) + '">' + "\n"
-	xml = xml + '      <display-name>' + html.unescape(channel["channelNo"] + " " + channel["callSign"]) + '</display-name>' + "\n"
-	xml = xml + '      <display-name>' + html.unescape(channel["channelNo"]) + '</display-name>' + "\n"
-	xml = xml + '      <display-name>' + html.unescape(channel["callSign"]) + '</display-name>' + "\n"
-	xml = xml + '    </channel>' + "\n"
+	xml = xml + "\t" + '<channel id="' +  html.unescape(channel["channelId"]) + '">' + "\n"
+	xml = xml + "\t\t" + '<display-name>' + html.unescape(channel["channelNo"] + " " + channel["callSign"]) + '</display-name>' + "\n"
+	xml = xml + "\t\t" + '<display-name>' + html.unescape(channel["channelNo"]) + '</display-name>' + "\n"
+	xml = xml + "\t\t" + '<display-name>' + html.unescape(channel["callSign"]) + '</display-name>' + "\n"
+#	if channel["logoURL"] is not None:
+#		xml = xml + "\t\t" + '<icon src="' + html.unescape(channel["logoURL"]) + '" />' + "\n"
+#	if channel["name"] is not None:
+#		xml = xml + "\t\t" + '<icon src="' + html.unescape(channel["name"]) + '" />' + "\n"
+	xml = xml + "\t" + '</channel>' + "\n"
 	return xml
 
 def buildXMLProgram(event,channelId):
 	#2018-04-11T21:00:00Z
 	#20180408120000 +0000
 	xml = ""
-	xml = xml + '    <programme start="' + buildXMLDate(event["startTime"]) + '" '
+	xml = xml + "\t" + '<programme start="' + buildXMLDate(event["startTime"]) + '" '
 	xml = xml + 'stop="' + buildXMLDate(event["endTime"]) + '" channel="' + html.unescape(channelId) + '">' + "\n"
-	xml = xml + '      <title lang="' + optLanguage + '">' + html.unescape(event["program"]["title"]) + '</title>' + "\n"
+	xml = xml + "\t\t" + '<title lang="' + optLanguage + '">' + html.unescape(event["program"]["title"]) + '</title>' + "\n"
 	if event["program"]["episodeTitle"] is not None:
-		xml = xml + '      <sub-title lang="' + optLanguage + '">' + html.unescape(event["program"]["episodeTitle"]) + ' </sub-title>' + "\n"
+		xml = xml + "\t\t" + '<sub-title lang="' + optLanguage + '">' + html.unescape(event["program"]["episodeTitle"]) + ' </sub-title>' + "\n"
 	if event["program"]["shortDesc"] is None:
 		event["program"]["shortDesc"] = "Unavailable"
-	xml = xml + '      <desc lang="' + optLanguage + '">' + html.unescape(event["program"]["shortDesc"]) + '</desc>' + "\n"
-	xml = xml + '      <length units="minutes">' + html.unescape(event["duration"]) + '</length>' + "\n"
+	xml = xml + "\t\t" + '<desc lang="' + optLanguage + '">' + html.unescape(event["program"]["shortDesc"]) + '</desc>' + "\n"
+	xml = xml + "\t\t" + '<length units="minutes">' + html.unescape(event["duration"]) + '</length>' + "\n"
 	for category in event["filter"]:
-		xml = xml + '      <category>' + html.unescape(category.replace('filter-','')) + '</category>' + "\n"
+		xml = xml + "\t\t" + '<category>' + html.unescape(category.replace('filter-','')) + '</category>' + "\n"
 	if event["thumbnail"] is not None:
-		xml = xml + '      <thumbnail>http://zap2it.tmsimg.com/assets/' + event["thumbnail"] + '.jpg</thumbnail>' + "\n"
-		xml = xml + '      <icon src="http://zap2it.tmsimg.com/assets/' + event["thumbnail"] + '.jpg" />' + "\n"
+		xml = xml + "\t\t" + '<thumbnail>http://zap2it.tmsimg.com/assets/' + event["thumbnail"] + '.jpg</thumbnail>' + "\n"
+		xml = xml + "\t\t" + '<icon src="http://zap2it.tmsimg.com/assets/' + event["thumbnail"] + '.jpg" />' + "\n"
 	if event["rating"] is not None:
-		xml = xml + '      <rating>' + "\n"
-		xml = xml + '           <value>' + event["rating"] + '</value>' + "\n"
-		xml = xml + '      </rating>' + "\n"
-	xml = xml + '      <subtitles type="teletext" />' + "\n"
+		xml = xml + "\t\t" + '<rating>' + "\n"
+		xml = xml + "\t\t\t" + '<value>' + event["rating"] + '</value>' + "\n"
+		xml = xml + "\t\t" + '</rating>' + "\n"
+	xml = xml + "\t\t" + '<subtitles type="teletext" />' + "\n"
 	season = "0"
 	episode = "0"
 	episodeid = ""
@@ -73,14 +77,14 @@ def buildXMLProgram(event,channelId):
 			season = "0" + str(season)
 		if int(episode) < 10:
 			episode = "0" + str(episode)
-		xml = xml + '      <episode-num system="SxxExx">S' + season + "E" + episode + "</episode-num>" + "\n"
-		xml = xml + '      <episode-num system="common">S' + season + "E" + episode + "</episode-num>" + "\n"
+		xml = xml + "\t\t" + '<episode-num system="SxxExx">S' + season + "E" + episode + "</episode-num>" + "\n"
+		xml = xml + "\t\t" + '<episode-num system="common">S' + season + "E" + episode + "</episode-num>" + "\n"
 
 	showid = event["seriesId"].replace('SH','')
 	episodeid = episodeid.replace('EP' + showid,'')
-	xml = xml + '      <episode-num system="dd_progid">EP' + html.unescape(showid + '.' + episodeid) + '</episode-num>' + "\n"
+	xml = xml + "\t\t" + '<episode-num system="dd_progid">EP' + html.unescape(showid + '.' + episodeid) + '</episode-num>' + "\n"
 	
-	xml = xml + '    </programme>'+"\n"
+	xml = xml + "\t" + '</programme>'+"\n"
 	return xml
 
 def buildXMLDate(inputDateString):
@@ -189,7 +193,7 @@ while(closestTimestamp < endTimestamp):
 	closestTimestamp = closestTimestamp + (60*60*3)
 
 guideXML = '<?xml version="1.0" encoding="UTF-8"?>' + "\n"
-guideXML = guideXML + '<!DOCTYPE tv SYSTEM "xmltv.dtd">' + "\n"
+guideXML = guideXML + '<!DOCTYPE tv SYSTEM "xmltv.dtd">' + "\n\n"
 
 guideXML = guideXML + '<tv source-info-url="http://tvlistings.zap2it.com/" source-info-name="zap2it.com" generator-info-name="zap2it-GuideScraping" generator-info-url="daniel@widrick.net">' + "\n"
 
@@ -201,6 +205,9 @@ guideXML = guideXML + '</tv>' + "\n"
 file = open(optGuideFile,"wb")
 file.write(guideXML.encode('utf8'))
 file.close()
+#file = open("xmlguide.xmltv.raw","wb")
+#file.write(guide.encode('utf8'))
+#file.close()
 
 #Write a Copy of the file with the current timestamp
 dateTimeObj = datetime.datetime.now()
