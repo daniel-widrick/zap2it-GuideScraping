@@ -69,16 +69,12 @@ def buildXMLProgram(event,channelId):
 		
 	#print season + "." + episode
 	if ((int(season) != 0) and (int(episode) != 0)):
-		if int(season) < 10:
-			season = "0" + str(season)
-		if int(episode) < 10:
-			episode = "0" + str(episode)
-		xml = xml + "\t\t" + '<episode-num system="SxxExx">S' + season + "E" + episode + "</episode-num>" + "\n"
-		xml = xml + "\t\t" + '<episode-num system="common">S' + season + "E" + episode + "</episode-num>" + "\n"
+		xml = xml + "\t\t" + '<episode-num system="common">S' + str(season).zfill(2) + "E" + str(episode).zfill(2) + "</episode-num>" + "\n"
+		xml = xml + "\t\t" + '<episode-num system="xmltv_ns">' + str(int(season) - 1) + "." + str(int(episode) - 1) + ".</episode-num>" + "\n"
 
-	showid = event["seriesId"].replace('SH','')
-	episodeid = episodeid.replace('EP' + showid,'')
-	xml = xml + "\t\t" + '<episode-num system="dd_progid">EP' + html.unescape(showid + '.' + episodeid) + '</episode-num>' + "\n"
+	episodeid = episodeid.replace('EP' + event["seriesId"].replace('SH',''),'')
+	xml = xml + "\t\t" + '<episode-num system="dd_progid">EP' + html.unescape(event["seriesId"].replace('SH','') + '.' + episodeid) + '</episode-num>' + "\n"
+	xml = xml + "\t\t" + '<url>https://tvlistings.zap2it.com//overview.html?programSeriesId=' + event["seriesId"] + '&amp;tmsId=' + event["seriesId"] + episodeid + '</url>' + "\n"
 
 	xml = xml + "\t\t" + '<subtitles type="teletext" />' + "\n"
 	if event["rating"] is not None:
