@@ -31,6 +31,9 @@ def buildXMLProgram(event,channelId):
 	#2018-04-11T21:00:00Z
 	#20180408120000 +0000
 	xml = ""
+	season = "0"
+	episode = "0"
+
 	xml = xml + "\t" + '<programme start="' + buildXMLDate(event["startTime"]) + '" '
 	xml = xml + 'stop="' + buildXMLDate(event["endTime"]) + '" channel="' + html.unescape(channelId) + '">' + "\n"
 	xml = xml + "\t\t" + '<title lang="' + optLanguage + '">' + html.unescape(event["program"]["title"]) + '</title>' + "\n"
@@ -46,9 +49,7 @@ def buildXMLProgram(event,channelId):
 		xml = xml + "\t\t" + '<thumbnail>http://zap2it.tmsimg.com/assets/' + event["thumbnail"] + '.jpg</thumbnail>' + "\n"
 		xml = xml + "\t\t" + '<icon src="http://zap2it.tmsimg.com/assets/' + event["thumbnail"] + '.jpg" />' + "\n"
 
-	season = "0"
-	episode = "0"
-	episodeid = ""
+	xml = xml + "\t\t" + '<url>https://tvlistings.zap2it.com//overview.html?programSeriesId=' + event["seriesId"] + '&amp;tmsId=' + event["program"]["id"] + '</url>' + "\n"
 	
 	try:
 	#if "season" in event:
@@ -57,9 +58,6 @@ def buildXMLProgram(event,channelId):
 		if event["program"]["episode"] is not None:
 			episode = str(event["program"]["episode"])
 
-	#if "id" in event:
-		if event["program"]["id"] is not None:
-			episodeid = str(event["program"]["id"])
 	except KeyError:
 		print("no season for:" + event["program"]["title"])
 		
@@ -68,9 +66,10 @@ def buildXMLProgram(event,channelId):
 		xml = xml + "\t\t" + '<episode-num system="common">S' + str(season).zfill(2) + "E" + str(episode).zfill(2) + "</episode-num>" + "\n"
 		xml = xml + "\t\t" + '<episode-num system="xmltv_ns">' + str(int(season) - 1) + "." + str(int(episode) - 1) + ".</episode-num>" + "\n"
 
-	episodeid = episodeid.replace('EP' + event["seriesId"].replace('SH',''),'')
-	xml = xml + "\t\t" + '<episode-num system="dd_progid">EP' + html.unescape(event["seriesId"].replace('SH','') + '.' + episodeid) + '</episode-num>' + "\n"
-	xml = xml + "\t\t" + '<url>https://tvlistings.zap2it.com//overview.html?programSeriesId=' + event["seriesId"] + '&amp;tmsId=' + event["seriesId"] + episodeid + '</url>' + "\n"
+	if event["program"]["id"][-4:] == "0000":
+		xml = xml + "\t\t" + '<episode-num system="dd_progid">' + event["seriesId"] + '.' + event["program"]["id"][-4:] + '</episode-num>' + "\n"
+	else:
+		xml = xml + "\t\t" + '<episode-num system="dd_progid">' + event["seriesId"].replace('SH','EP') + '.' + event["program"]["id"][-4:] + '</episode-num>' + "\n"
 
 	xml = xml + "\t\t" + '<subtitles type="teletext" />' + "\n"
 	if event["rating"] is not None:
