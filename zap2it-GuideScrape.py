@@ -24,6 +24,8 @@ def buildXMLChannel(channel):
 	xml = xml + "\t\t" + '<display-name>' + html.unescape(channel["channelNo"] + " " + channel["callSign"]) + '</display-name>' + "\n"
 	xml = xml + "\t\t" + '<display-name>' + html.unescape(channel["channelNo"]) + '</display-name>' + "\n"
 	xml = xml + "\t\t" + '<display-name>' + html.unescape(channel["callSign"]) + '</display-name>' + "\n"
+	xml = xml + "\t\t" + '<display-name>' + html.unescape(channel["affiliateName"].title()) + '</display-name>' + "\n"
+	xml = xml + "\t\t" + '<icon src="http:' + channel["thumbnail"].partition('?')[0] + '" />' + "\n"
 	xml = xml + "\t" + '</channel>' + "\n"
 	return xml
 
