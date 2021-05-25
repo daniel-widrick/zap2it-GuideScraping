@@ -53,8 +53,6 @@ def buildXMLProgram(event,channelId):
 	if event["program"]["shortDesc"] is None:
 		event["program"]["shortDesc"] = "Unavailable"
 	xml = xml + "\t\t" + '<desc lang="' + optLanguage + '">' + html.unescape(event["program"]["shortDesc"]) + '</desc>' + "\n"
-	for category in event["filter"]:
-		xml = xml + "\t\t" + '<category>' + html.unescape(category.replace('filter-','')) + '</category>' + "\n"
 	xml = xml + "\t\t" + '<length units="minutes">' + html.unescape(event["duration"]) + '</length>' + "\n"
 	if event["thumbnail"] is not None:
 		xml = xml + "\t\t" + '<thumbnail>http://zap2it.tmsimg.com/assets/' + event["thumbnail"] + '.jpg</thumbnail>' + "\n"
@@ -71,9 +69,13 @@ def buildXMLProgram(event,channelId):
 
 	except KeyError:
 		print("no season for:" + event["program"]["title"])
+
+	for category in event["filter"]:
+		xml = xml + "\t\t" + '<category lang="en">' + html.unescape(category.replace('filter-','')) + '</category>' + "\n"
 		
 	#print season + "." + episode
 	if ((int(season) != 0) and (int(episode) != 0)):
+		xml = xml + "\t\t" + '<category lang="en">Series</category>' + "\n"
 		xml = xml + "\t\t" + '<episode-num system="common">S' + str(season).zfill(2) + "E" + str(episode).zfill(2) + "</episode-num>" + "\n"
 		xml = xml + "\t\t" + '<episode-num system="xmltv_ns">' + str(int(season) - 1) + "." + str(int(episode) - 1) + ".</episode-num>" + "\n"
 
