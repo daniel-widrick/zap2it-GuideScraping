@@ -18,6 +18,15 @@ import sys, getopt
 #Libraries for historical copies
 import datetime, os
 
+def sanitizeData(data):
+	#https://stackoverflow.com/questions/1091945/what-characters-do-i-need-to-escape-in-xml-documents
+	sData = data.replace('"','&quot;')
+	sData = sData.replace("'",'&apos;')
+	sData = sData.replace('<','&lt;')
+	sData = sData.replace('<','&gt;')
+	sData = sData.replace('&','&amp;')
+	return sData;
+
 def buildXMLChannel(channel):
 	xml = ""
 	xml = xml + "\t" + '<channel id="' +  html.unescape(channel["channelId"]) + '">' + "\n"
@@ -38,7 +47,7 @@ def buildXMLProgram(event,channelId):
 
 	xml = xml + "\t" + '<programme start="' + buildXMLDate(event["startTime"]) + '" '
 	xml = xml + 'stop="' + buildXMLDate(event["endTime"]) + '" channel="' + html.unescape(channelId) + '">' + "\n"
-	xml = xml + "\t\t" + '<title lang="' + optLanguage + '">' + html.unescape(event["program"]["title"]) + '</title>' + "\n"
+	xml = xml + "\t\t" + '<title lang="' + optLanguage + '">' + sanitizeData(event["program"]["title"]) + '</title>' + "\n"
 	if event["program"]["episodeTitle"] is not None:
 		xml = xml + "\t\t" + '<sub-title lang="' + optLanguage + '">' + html.unescape(event["program"]["episodeTitle"]) + '</sub-title>' + "\n"
 	if event["program"]["shortDesc"] is None:
