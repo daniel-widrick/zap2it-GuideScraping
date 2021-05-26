@@ -20,12 +20,12 @@ import datetime, os
 
 def sanitizeData(data):
 	#https://stackoverflow.com/questions/1091945/what-characters-do-i-need-to-escape-in-xml-documents
-	sData = data.replace('"','&quot;')
-	sData = sData.replace("'",'&apos;')
-	sData = sData.replace('<','&lt;')
-	sData = sData.replace('<','&gt;')
-	sData = sData.replace('&','&amp;')
-	return sData;
+	data = data.replace('&','&amp;')
+	data = data.replace('"','&quot;')
+	data = data.replace("'",'&apos;')
+	data = data.replace('<','&lt;')
+	data = data.replace('>','&gt;')
+	return data;
 
 def buildXMLChannel(channel):
 	xml = ""
@@ -49,10 +49,10 @@ def buildXMLProgram(event,channelId):
 	xml = xml + 'stop="' + buildXMLDate(event["endTime"]) + '" channel="' + html.unescape(channelId) + '">' + "\n"
 	xml = xml + "\t\t" + '<title lang="' + optLanguage + '">' + sanitizeData(event["program"]["title"]) + '</title>' + "\n"
 	if event["program"]["episodeTitle"] is not None:
-		xml = xml + "\t\t" + '<sub-title lang="' + optLanguage + '">' + html.unescape(event["program"]["episodeTitle"]) + '</sub-title>' + "\n"
+		xml = xml + "\t\t" + '<sub-title lang="' + optLanguage + '">' + sanitizeData(event["program"]["episodeTitle"]) + '</sub-title>' + "\n"
 	if event["program"]["shortDesc"] is None:
 		event["program"]["shortDesc"] = "Unavailable"
-	xml = xml + "\t\t" + '<desc lang="' + optLanguage + '">' + html.unescape(event["program"]["shortDesc"]) + '</desc>' + "\n"
+	xml = xml + "\t\t" + '<desc lang="' + optLanguage + '">' + sanitizeData(event["program"]["shortDesc"]) + '</desc>' + "\n"
 	xml = xml + "\t\t" + '<length units="minutes">' + html.unescape(event["duration"]) + '</length>' + "\n"
 	if event["thumbnail"] is not None:
 		xml = xml + "\t\t" + '<thumbnail>http://zap2it.tmsimg.com/assets/' + event["thumbnail"] + '.jpg</thumbnail>' + "\n"
