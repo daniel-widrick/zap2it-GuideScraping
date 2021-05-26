@@ -84,6 +84,14 @@ def buildXMLProgram(event,channelId):
 	else:
 		xml = xml + "\t\t" + '<episode-num system="dd_progid">' + event["seriesId"].replace('SH','EP') + '.' + event["program"]["id"][-4:] + '</episode-num>' + "\n"
 
+	for flag in event["flag"]:
+		if (flag == "New"):
+			xml = xml + "\t\t<new />\n"
+		elif (flag == "Finale"):
+			xml = xml + "\t\t<last-chance />\n"
+		elif (flag == "Premiere"):
+			xml = xml + "\t\t<premiere />\n"
+
 	xml = xml + "\t\t" + '<subtitles type="teletext" />' + "\n"
 	if event["rating"] is not None:
 		xml = xml + "\t\t" + '<rating>' + "\n"
