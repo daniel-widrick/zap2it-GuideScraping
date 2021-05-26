@@ -92,7 +92,10 @@ def buildXMLProgram(event,channelId):
 		elif (flag == "Premiere"):
 			xml = xml + "\t\t<premiere />\n"
 
-	xml = xml + "\t\t" + '<subtitles type="teletext" />' + "\n"
+	for tag in event["tags"]:
+		if (tag == "CC"):
+			xml = xml + "\t\t" + '<subtitles type="teletext" />' + "\n"
+
 	if event["rating"] is not None:
 		xml = xml + "\t\t" + '<rating>' + "\n"
 		xml = xml + "\t\t\t" + '<value>' + event["rating"] + '</value>' + "\n"
