@@ -112,7 +112,7 @@ def buildXMLDate(inputDateString):
 	return outputDate
 
 #Add Paramter options for config file and guide file
-optConfigFile = './xap2itconfig.ini'
+optConfigFile = './zap2itconfig.ini'
 optGuideFile = 'xmlguide.xmltv'
 optLanguage = 'en'
 try:
