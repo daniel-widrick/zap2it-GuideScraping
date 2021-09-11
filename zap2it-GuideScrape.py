@@ -17,6 +17,7 @@ import html
 import sys, getopt
 #Libraries for historical copies
 import datetime, os
+from xml.sax.saxutils import escape
 
 def sanitizeData(data):
 	#https://stackoverflow.com/questions/1091945/what-characters-do-i-need-to-escape-in-xml-documents
@@ -33,7 +34,7 @@ def buildXMLChannel(channel):
 	xml = xml + "\t\t" + '<display-name>' + html.unescape(channel["channelNo"] + " " + channel["callSign"]) + '</display-name>' + "\n"
 	xml = xml + "\t\t" + '<display-name>' + html.unescape(channel["channelNo"]) + '</display-name>' + "\n"
 	xml = xml + "\t\t" + '<display-name>' + html.unescape(channel["callSign"]) + '</display-name>' + "\n"
-	xml = xml + "\t\t" + '<display-name>' + html.unescape(channel["affiliateName"].title()) + '</display-name>' + "\n"
+	xml = xml + "\t\t" + '<display-name>' + escape(html.unescape(channel["affiliateName"].title())) + '</display-name>' + "\n"
 	xml = xml + "\t\t" + '<icon src="http:' + channel["thumbnail"].partition('?')[0] + '" />' + "\n"
 	xml = xml + "\t" + '</channel>' + "\n"
 	return xml
@@ -59,7 +60,7 @@ def buildXMLProgram(event,channelId):
 		xml = xml + "\t\t" + '<icon src="http://zap2it.tmsimg.com/assets/' + event["thumbnail"] + '.jpg" />' + "\n"
 
 	xml = xml + "\t\t" + '<url>https://tvlistings.zap2it.com//overview.html?programSeriesId=' + event["seriesId"] + '&amp;tmsId=' + event["program"]["id"] + '</url>' + "\n"
-	
+
 	try:
 	#if "season" in event:
 		if event["program"]["season"] is not None:
@@ -72,7 +73,7 @@ def buildXMLProgram(event,channelId):
 
 	for category in event["filter"]:
 		xml = xml + "\t\t" + '<category lang="en">' + html.unescape(category.replace('filter-','')) + '</category>' + "\n"
-		
+
 	#print season + "." + episode
 	if ((int(season) != 0) and (int(episode) != 0)):
 		xml = xml + "\t\t" + '<category lang="en">Series</category>' + "\n"
@@ -100,7 +101,7 @@ def buildXMLProgram(event,channelId):
 		xml = xml + "\t\t" + '<rating>' + "\n"
 		xml = xml + "\t\t\t" + '<value>' + event["rating"] + '</value>' + "\n"
 		xml = xml + "\t\t" + '</rating>' + "\n"
-	
+
 	xml = xml + "\t" + '</programme>'+"\n"
 	return xml
 
@@ -187,7 +188,7 @@ while(closestTimestamp < endTimestamp):
 		'lineupId':'DFLTE',
 		'timespan':3,
 		'headendId': 'lineupId',
-		'country': Config.get("prefs","country"), 
+		'country': Config.get("prefs","country"),
 		'device': '-',
 		'postalCode': Config.get("prefs","zipCode"),
 		'isOverride': "true",
