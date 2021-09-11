@@ -1,242 +1,267 @@
-#!/usr/bin/env python3
-"""
-Forked from https://github.com/daniel-widrick/zap2it-GuideScraping
-All credit goes to daniel-widrick.
-
-Updated to use python3. Switching to python3 improved CPU usage and reduced A
-processing time to generate xmlguide.xmltv.
-"""
-#Required libraries
 import configparser
-import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse
 import json
-import time
-import math
-import html
-#Additional Libraries for Parameter Parsing
-import sys, getopt
-#Libraries for historical copies
-import datetime, os
-from xml.sax.saxutils import escape
+import urllib.request, urllib.parse
+import time, datetime
+import xml.dom.minidom
+import sys, os, getopt
 
-def sanitizeData(data):
-	#https://stackoverflow.com/questions/1091945/what-characters-do-i-need-to-escape-in-xml-documents
-	data = data.replace('&','&amp;')
-	data = data.replace('"','&quot;')
-	data = data.replace("'",'&apos;')
-	data = data.replace('<','&lt;')
-	data = data.replace('>','&gt;')
-	return data;
+class Zap2ItGuideScrape():
 
-def buildXMLChannel(channel):
-	xml = ""
-	xml = xml + "\t" + '<channel id="' +  html.unescape(channel["channelId"]) + '">' + "\n"
-	xml = xml + "\t\t" + '<display-name>' + html.unescape(channel["channelNo"] + " " + channel["callSign"]) + '</display-name>' + "\n"
-	xml = xml + "\t\t" + '<display-name>' + html.unescape(channel["channelNo"]) + '</display-name>' + "\n"
-	xml = xml + "\t\t" + '<display-name>' + html.unescape(channel["callSign"]) + '</display-name>' + "\n"
-	xml = xml + "\t\t" + '<display-name>' + escape(html.unescape(channel["affiliateName"].title())) + '</display-name>' + "\n"
-	xml = xml + "\t\t" + '<icon src="http:' + channel["thumbnail"].partition('?')[0] + '" />' + "\n"
-	xml = xml + "\t" + '</channel>' + "\n"
-	return xml
+    def __init__(self,configLocation="./zap2itconfig.ini",outputFile="xmlguide.xmltv"):
+        self.confLocation = configLocation
+        self.outputFile=outputFile
+        print("Loading cconfig: ", self.confLocation, " and outputting: ", outputFile)
+        self.config = configparser.ConfigParser()
+        self.config.read(self.confLocation)
+        self.lang = self.config.get("prefs","lang")
 
-def buildXMLProgram(event,channelId):
-	#2018-04-11T21:00:00Z
-	#20180408120000 +0000
-	xml = ""
-	season = "0"
-	episode = "0"
+        self.zapToken = ""
+    def BuildAuthRequest(self):
+        url = "https://tvlistings.zap2it.com/api/user/login"
+        parameters = {
+            "emailid": self.config.get("creds","username"),
+            "password": self.config.get("creds","password"),
+            "isfacebookuser": "false",
+            "usertype": 0,
+            "objectid": ""
+        }
+        data = urllib.parse.urlencode((parameters))
+        data = data.encode('ascii')
+        req = urllib.request.Request(url, data)
+        return req
+    def Authenticate(self):
+        #Get token from login form
+        authRequest = self.BuildAuthRequest()
+        authResponse = urllib.request.urlopen(authRequest).read()
+        authFormVars = json.loads(authResponse)
+        self.zapTocken = authFormVars["token"]
+    def BuildDataRequest(self,currentTime):
+        parameters = {
+            'Activity_ID': 1,
+            'FromPage': "TV%20Guide",
+            'AffiliateId': "gapzap",
+            'token': self.zapToken,
+            'aid': 'gapzap',
+            'lineupId': 'DFLTE',
+            'timespan': 3,
+            'headendId': 'lineupId',
+            'country': self.config.get("prefs", "country"),
+            'device': '-',
+            'postalCode': self.config.get("prefs", "zipCode"),
+            'isOverride': "true",
+            'time': currentTime,
+            'pref': 'm,p',
+            'userId': '-'
+        }
+        data = urllib.parse.urlencode(parameters)
+        url = "https://tvlistings.zap2it.com/api/grid?" + data
+        req = urllib.request.Request(url)
+        return req
+    def GetData(self,time):
+        request = self.BuildDataRequest(time)
+        print("Load Guide for time: ",str(time))
+        response = urllib.request.urlopen(request).read()
+        return json.loads(response)
+    def AddResultsToGuide(self,json,addChannels=True):
+        for channel in json["channels"]:
+            if addChannels:
+                self.rootEl.appendChild(self.BuildChannelXML(channel))
+            for event in channel["events"]:
+                self.rootEl.appendChild(self.BuildEventXmL(event,channel["channelId"]))
+    def BuildEventXmL(self,event,channelId):
+        #preConfig
+        season = "0"
+        episode = "0"
 
-	xml = xml + "\t" + '<programme start="' + buildXMLDate(event["startTime"]) + '" '
-	xml = xml + 'stop="' + buildXMLDate(event["endTime"]) + '" channel="' + html.unescape(channelId) + '">' + "\n"
-	xml = xml + "\t\t" + '<title lang="' + optLanguage + '">' + sanitizeData(event["program"]["title"]) + '</title>' + "\n"
-	if event["program"]["episodeTitle"] is not None:
-		xml = xml + "\t\t" + '<sub-title lang="' + optLanguage + '">' + sanitizeData(event["program"]["episodeTitle"]) + '</sub-title>' + "\n"
-	if event["program"]["shortDesc"] is None:
-		event["program"]["shortDesc"] = "Unavailable"
-	xml = xml + "\t\t" + '<desc lang="' + optLanguage + '">' + sanitizeData(event["program"]["shortDesc"]) + '</desc>' + "\n"
-	xml = xml + "\t\t" + '<length units="minutes">' + html.unescape(event["duration"]) + '</length>' + "\n"
-	if event["thumbnail"] is not None:
-		xml = xml + "\t\t" + '<thumbnail>http://zap2it.tmsimg.com/assets/' + event["thumbnail"] + '.jpg</thumbnail>' + "\n"
-		xml = xml + "\t\t" + '<icon src="http://zap2it.tmsimg.com/assets/' + event["thumbnail"] + '.jpg" />' + "\n"
+        programEl = self.guideXML.createElement("programme")
+        programEl.setAttribute("start",self.BuildXMLDate(event["startTime"]))
+        programEl.setAttribute("stop",self.BuildXMLDate(event["endTime"]))
+        programEl.setAttribute("channel",channelId)
 
-	xml = xml + "\t\t" + '<url>https://tvlistings.zap2it.com//overview.html?programSeriesId=' + event["seriesId"] + '&amp;tmsId=' + event["program"]["id"] + '</url>' + "\n"
+        titleEl = self.guideXML.createElement("title")
+        titleEl.setAttribute("lang",self.lang) #TODO: define
+        titleTextEl = self.guideXML.createTextNode(event["program"]["title"])
+        titleEl.appendChild(titleTextEl)
+        programEl.appendChild(titleEl)
 
-	try:
-	#if "season" in event:
-		if event["program"]["season"] is not None:
-			season = str(event["program"]["season"])
-		if event["program"]["episode"] is not None:
-			episode = str(event["program"]["episode"])
+        if event["program"]["episodeTitle"] is not None:
+            subTitleEl = self.CreateElementWithData("sub-title",event["program"]["episodeTitle"])
+            subTitleEl.setAttribute("lang",self.lang)
+            programEl.appendChild(subTitleEl)
 
-	except KeyError:
-		print("no season for:" + event["program"]["title"])
+        if event["program"]["shortDesc"] is None:
+            event["program"]["shortDesc"] = "Unavailable"
+        descriptionEl = self.CreateElementWithData("desc",event["program"]["shortDesc"])
+        descriptionEl.setAttribute("lang",self.lang)
+        programEl.appendChild(descriptionEl)
 
-	for category in event["filter"]:
-		xml = xml + "\t\t" + '<category lang="en">' + html.unescape(category.replace('filter-','')) + '</category>' + "\n"
+        lengthEl = self.CreateElementWithData("length",event["duration"])
+        lengthEl.setAttribute("units","minutes")
+        programEl.appendChild(lengthEl)
 
-	#print season + "." + episode
-	if ((int(season) != 0) and (int(episode) != 0)):
-		xml = xml + "\t\t" + '<category lang="en">Series</category>' + "\n"
-		xml = xml + "\t\t" + '<episode-num system="common">S' + str(season).zfill(2) + "E" + str(episode).zfill(2) + "</episode-num>" + "\n"
-		xml = xml + "\t\t" + '<episode-num system="xmltv_ns">' + str(int(season) - 1) + "." + str(int(episode) - 1) + ".</episode-num>" + "\n"
+        thumnailEl = self.CreateElementWithData("thumnail","http://zap2it.tmsimg.com/assets/" + event["thumbnail"] + ".jpg")
+        iconEl = self.guideXML.createElement("icon")
+        iconEl.setAttribute("src","http://zap2it.tmsimg.com/assets/" + event["thumbnail"] + ".jpg")
+        programEl.appendChild(thumnailEl)
+        programEl.appendChild(iconEl)
 
-	if event["program"]["id"][-4:] == "0000":
-		xml = xml + "\t\t" + '<episode-num system="dd_progid">' + event["seriesId"] + '.' + event["program"]["id"][-4:] + '</episode-num>' + "\n"
-	else:
-		xml = xml + "\t\t" + '<episode-num system="dd_progid">' + event["seriesId"].replace('SH','EP') + '.' + event["program"]["id"][-4:] + '</episode-num>' + "\n"
+        urlEl = self.CreateElementWithData("url","https://tvlistings.zap2it.com//overview.html?programSeriesId=" + event["seriesId"] + "&amp;tmsId=" + event["program"]["id"])
+        programEl.appendChild(urlEl)
+        #Build Season Data
+        try:
+            if event["program"]["season"] is not None:
+                season = str(event["program"]["season"])
+            if event["program"]["episode"] is not None:
+                episode = str(event["program"]["episode"])
+        except KeyError:
+            print("No Season for:" + event["program"]["title"])
 
-	for flag in event["flag"]:
-		if (flag == "New"):
-			xml = xml + "\t\t<new />\n"
-		elif (flag == "Finale"):
-			xml = xml + "\t\t<last-chance />\n"
-		elif (flag == "Premiere"):
-			xml = xml + "\t\t<premiere />\n"
+        for category in event["filter"]:
+            categoryEl = self.CreateElementWithData("category",category.replace('filter-',''))
+            categoryEl.setAttribute("lang",self.lang)
+            programEl.appendChild(categoryEl)
 
-	for tag in event["tags"]:
-		if (tag == "CC"):
-			xml = xml + "\t\t" + '<subtitles type="teletext" />' + "\n"
+        if((int(season) != 0) and (int(episode) != 0)):
+            categoryEl = self.CreateElementWithData("category","Series")
+            programEl.appendChild(categoryEl)
+            episodeNum =  "S" + str(event["seriesId"]).zfill(2) + "E" + str(episode.zfill(2))
+            episodeNumEl = self.CreateElementWithData("episode-num",episodeNum)
+            episodeNumEl.setAttribute("system","common")
+            programEl.appendChild(episodeNumEl)
+            episodeNum = str(int(season)-1) + "." +str(int(episode)-1)
+            episodeNumEl = self.CreateElementWithData("episode-num",episodeNum)
+            programEl.appendChild(episodeNumEl)
 
-	if event["rating"] is not None:
-		xml = xml + "\t\t" + '<rating>' + "\n"
-		xml = xml + "\t\t\t" + '<value>' + event["rating"] + '</value>' + "\n"
-		xml = xml + "\t\t" + '</rating>' + "\n"
+        if event["program"]["id"[-4:]] == "0000":
+            episodeNumEl = self.CreateElementWithData("episode-num",event["seriesId"] + '.' + event["program"]["id"][-4:])
+            episodeNumEl.setAttribute("system","dd_progid")
+        else:
+            episodeNumEl = self.CreateElementWithData("episode-num",event["seriesId"].replace('SH','EP') + '.' + event["program"]["id"][-4:])
+            episodeNumEl.setAttribute("system","dd_progid")
+        programEl.appendChild(episodeNumEl)
 
-	xml = xml + "\t" + '</programme>'+"\n"
-	return xml
+        #Handle Flags
+        for flag in event["flag"]:
+            if flag == "New":
+                programEl.appendChild(self.guideXML.createElement("New"))
+            if flag == "Finale":
+                programEl.appendChild(self.guideXML.createElement("Finale"))
+            if flag == "Premiere":
+                programEl.appendChild(self.guideXML.createElement("Premiere"))
+        for tag in event["tags"]:
+            if tag == "CC":
+                subtitlesEl = self.guideXML.createElement("subtitle")
+                subtitlesEl.setAttribute("type","teletext")
+                programEl.appendChild(subtitlesEl)
+        if event["rating"] is not None:
+            ratingEl = self.guideXML.createElement("rating")
+            valueEl = self.CreateElementWithData("value",event["rating"])
+            ratingEl.appendChild(valueEl)
+        return programEl
+    def BuildXMLDate(self,inTime):
+        output = inTime.replace('-','').replace('T','').replace(':','')
+        output = output.replace('Z',' +0000')
+        return output
+    def BuildChannelXML(self,channel):
+        channelEl = self.guideXML.createElement('channel')
+        channelEl.setAttribute('id',channel["channelId"])
+        dispName1 = self.CreateElementWithData("display-name",channel["channelNo"] + " " + channel["callSign"])
+        dispName2 = self.CreateElementWithData("displayName",channel["channelNo"])
+        dispName3 = self.CreateElementWithData("displayName",channel["callSign"])
+        dispName4 = self.CreateElementWithData("displayName",channel["affiliateName"].title())
+        iconEl = self.guideXML.createElement("icon")
+        iconEl.setAttribute("src","http://"+channel["thumbnail"].partition('?')[0])
+        channelEl.appendChild(dispName1)
+        channelEl.appendChild(dispName2)
+        channelEl.appendChild(dispName3)
+        channelEl.appendChild(dispName4)
+        channelEl.appendChild(iconEl)
+        return channelEl
 
-def buildXMLDate(inputDateString):
-	outputDate = inputDateString.replace('-','')
-	outputDate = outputDate.replace('T','')
-	outputDate = outputDate.replace(':','')
-	outputDate = outputDate.replace('Z',' +0000')
-	return outputDate
+    def CreateElementWithData(self,name,data):
+        el = self.guideXML.createElement(name)
+        elText = self.guideXML.createTextNode(data)
+        el.appendChild(elText)
+        return el
+    def GetGuideTimes(self):
+        currentTimestamp = time.time()
+        currentTimestamp -= 60 * 60 * 24
+        halfHourOffset = currentTimestamp % (60 * 30)
+        currentTimestamp = currentTimestamp - halfHourOffset
+        endTimeStamp = currentTimestamp + (60 * 60 * 336)
+        return (currentTimestamp,endTimeStamp)
+    def BuildRootEl(self):
+        self.rootEl = self.guideXML.createElement('tv')
+        self.rootEl.setAttribute("source-info-url","http://tvlistings.zap2it.com/")
+        self.rootEl.setAttribute("source-info-name","zap2it")
+        self.rootEl.setAttribute("generator-info-name","zap2it-GuideScraping)")
+        self.rootEl.setAttribute("generator-info-url","daniel@widrick.net")
+    def BuildGuide(self):
+        self.Authenticate()
+        self.guideXML = xml.dom.minidom.Document()
+        impl = xml.dom.minidom.getDOMImplementation()
+        doctype = impl.createDocumentType("tv","","xmltv.dtd")
+        self.guideXML.appendChild(doctype)
+        self.BuildRootEl()
 
-#Add Paramter options for config file and guide file
+        addChannels = True;
+        times = self.GetGuideTimes()
+        loopTime = times[0]
+        while(loopTime < times[1]):
+            json = self.GetData(loopTime)
+            self.AddResultsToGuide(json,addChannels)
+            addChannels = False
+            loopTime += (60 * 60 * 3)
+        self.guideXML.appendChild(self.rootEl)
+        self.WriteGuide()
+        self.CopyHistorical()
+        self.CleanHistorical()
+    def WriteGuide(self):
+        with open(self.outputFile,"wb") as file:
+            file.write(self.guideXML.toprettyxml().encode("utf8"))
+    def CopyHistorical(self):
+        dateTimeObj = datetime.datetime.now()
+        timestampStr = "." + dateTimeObj.strftime("%Y%m%d%H%M%S") + '.xmltv'
+        histGuideFile = timestampStr.join(optGuideFile.rsplit('.xmltv',1))
+        with open(histGuideFile,"wb") as file:
+            file.write(self.guideXML.toprettyxml().encode("utf8"))
+    def CleanHistorical(self):
+        outputFilePath = os.path.abspath(self.outputFile)
+        outputDir = os.path.dirname(outputFilePath)
+        for item in os.listdir(outputDir):
+            fileName = os.path.join(outputDir,item)
+            if os.path.isfile(fileName) & item.endswith('.xmltv'):
+                histGuideDays = self.config.get("prefs","historicalGuideDays")
+                if os.stat(fileName).st_mtime < int(histGuideDays) * 86400:
+                    os.remove(fileName)
+
+
+
+#Run the Scraper
 optConfigFile = './zap2itconfig.ini'
 optGuideFile = 'xmlguide.xmltv'
 optLanguage = 'en'
 try:
-	opts, args = getopt.getopt(sys.argv[1:],"hi:o:l:",["ifile=","ofile=","language="])
-except getopt.GetoptError:
-	print("zap2it-GuideScrape.py [-i <inputfile> ] [-o <outputfile>] [-l <language>")
-	sys.exit()
+    opts, args = getopt.getopt(sys.argv[1:],"hi:o:l",["ifile=","ofile=","language="])
+except getopt.GetoptError as e:
+    print("zap2it-GuideScrape.py [-i <inputfile> ] [-o <outputfile>] [-l <language>")
+    sys.exit()
 
 for opt, arg in opts:
-	if opt == '-h':
-		print("zap2it-GuideScrape.py [-i <inputfile> ] [-o <outputfile>]")
-		sys.exit()
-	elif opt in ("-i","--ifile"):
-		optConfigFile = arg
-	elif opt in ("-o","--ofile"):
-		optGuideFile = arg
-	elif opt in ("-l","--language"):
-		optLanguage = arg
+    if opt == "-h":
+        print("zap2it-GuideScrape.py [-i <inputfile> ] [-o <outputfile>] [-l <language>")
+        sys.exit()
+    elif opt in ("-i","--ifile"):
+        optConfigFile = arg
+    elif opt in ("-o","--ofile"):
+        optGuideFile = arg
+    elif opt in ("-l","--language"):
+        optLanguage = arg
 
-print("Loading config: ", optConfigFile, " and outputting: ", optGuideFile)
+guide = Zap2ItGuideScrape(optConfigFile,optGuideFile)
+if optLanguage != "en":
+    guide.lang = optLanguage
 
-#Configuration loading
-Config = configparser.ConfigParser()
-Config
-Config.read(optConfigFile)
-
-
-#Build authentication request
-url = 'https://tvlistings.zap2it.com/api/user/login'
-parameters = {
-	'emailid': Config.get("creds","username"),
-	'password': Config.get("creds","password"),
-	'isfacebookuser': "false",
-	'usertype': 0,
-	'objectid': ''
-}
-data = urllib.parse.urlencode(parameters)
-data = data.encode('ascii') # data should be bytes
-req = urllib.request.Request(url,data)
-
-#Load Authentication resposne from server
-response = ""
-response = urllib.request.urlopen(req).read()
-zapVars = json.loads(response)
-
-#Save authentication token from server
-zapToken = "placeHolder"
-zapToken = zapVars["token"]
+guide.BuildGuide()
 
 
-
-#Find previous half hour from now()
-currentTimestamp = time.time() - 60 * 60 * 24
-halfHourOffset = currentTimestamp % (60 * 30)
-closestTimestamp = currentTimestamp - halfHourOffset
-closestTimestamp = int(closestTimestamp)
-endTimestamp = closestTimestamp + (60*60*336)
-channelXML = ""
-programXML = ""
-addChannels = True
-
-while(closestTimestamp < endTimestamp):
-
-	print("Load guide for time: " + str(closestTimestamp)  + ' - ' + str(endTimestamp))
-	#build parameters for grid call
-	parameters = {
-		'Activity_ID': 1,
-		'FromPage': "TV%20Guide",
-		'AffiliateId': "gapzap",
-		'token': zapToken,
-		'aid': 'gapzap',
-		'lineupId':'DFLTE',
-		'timespan':3,
-		'headendId': 'lineupId',
-		'country': Config.get("prefs","country"),
-		'device': '-',
-		'postalCode': Config.get("prefs","zipCode"),
-		'isOverride': "true",
-		'time': closestTimestamp,
-		'pref': 'm,p',
-		'userId': '-'
-	}
-	data = urllib.parse.urlencode(parameters)
-	url = "https://tvlistings.zap2it.com/api/grid?" + data
-	req = urllib.request.Request(url)
-	response = ""
-	response = urllib.request.urlopen(req).read()
-	guide = json.loads(response)
-	for channel in guide["channels"]:
-		if addChannels == True:
-			channelXML = channelXML + buildXMLChannel(channel)
-		for event in channel["events"]:
-			programXML = programXML + buildXMLProgram(event,channel["channelId"])
-	addChannels = False
-	closestTimestamp = closestTimestamp + (60*60*3)
-
-guideXML = '<?xml version="1.0" encoding="UTF-8"?>' + "\n"
-guideXML = guideXML + '<!DOCTYPE tv SYSTEM "xmltv.dtd">' + "\n\n"
-
-guideXML = guideXML + '<tv source-info-url="http://tvlistings.zap2it.com/" source-info-name="zap2it.com" generator-info-name="zap2it-GuideScraping" generator-info-url="daniel@widrick.net">' + "\n"
-
-guideXML = guideXML + channelXML
-guideXML = guideXML + programXML
-
-guideXML = guideXML + '</tv>' + "\n"
-
-file = open(optGuideFile,"wb")
-file.write(guideXML.encode('utf8'))
-file.close()
-
-#Write a Copy of the file with the current timestamp
-dateTimeObj = datetime.datetime.now()
-timestampStr = "." + dateTimeObj.strftime("%Y%m%d%H%M%s") + '.xmltv'
-histGuideFile = timestampStr.join(optGuideFile.rsplit('.xmltv',1))
-file = open(histGuideFile,"wb")
-file.write(guideXML.encode('utf8'))
-file.close()
-
-#Clean old files
-outputFilePath = os.path.abspath(optGuideFile)
-outputDir = os.path.dirname(outputFilePath)
-for item in os.listdir(outputDir):
-	fileName = os.path.join(outputDir,item)
-	if os.path.isfile(fileName) & item.endswith('.xmltv') & (os.stat(fileName).st_mtime < time.time() - (int(Config.get("prefs","historicalGuideDays")) * 86400)):
-		os.remove(fileName)
-sys.exit()

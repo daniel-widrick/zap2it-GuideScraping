@@ -5,3 +5,4 @@ Password: examplePass
 country: USA
 zipCode: 55555
 historicalGuideDays: 14
+lang: en
