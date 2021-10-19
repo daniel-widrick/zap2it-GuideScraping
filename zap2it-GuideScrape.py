@@ -3,14 +3,14 @@ import json
 import urllib.request, urllib.parse
 import time, datetime
 import xml.dom.minidom
-import sys, os, getopt
+import sys, os, argparse
 
 class Zap2ItGuideScrape():
 
     def __init__(self,configLocation="./zap2itconfig.ini",outputFile="xmlguide.xmltv"):
         self.confLocation = configLocation
         self.outputFile=outputFile
-        print("Loading cconfig: ", self.confLocation, " and outputting: ", outputFile)
+        print("Loading config: ", self.confLocation, " and outputting: ", outputFile)
         self.config = configparser.ConfigParser()
         self.config.read(self.confLocation)
         self.lang = self.config.get("prefs","lang")
@@ -241,22 +241,21 @@ class Zap2ItGuideScrape():
 optConfigFile = './zap2itconfig.ini'
 optGuideFile = 'xmlguide.xmltv'
 optLanguage = 'en'
-try:
-    opts, args = getopt.getopt(sys.argv[1:],"hi:o:l",["ifile=","ofile=","language="])
-except getopt.GetoptError as e:
-    print("zap2it-GuideScrape.py [-i <inputfile> ] [-o <outputfile>] [-l <language>")
-    sys.exit()
 
-for opt, arg in opts:
-    if opt == "-h":
-        print("zap2it-GuideScrape.py [-i <inputfile> ] [-o <outputfile>] [-l <language>")
-        sys.exit()
-    elif opt in ("-i","--ifile"):
-        optConfigFile = arg
-    elif opt in ("-o","--ofile"):
-        optGuideFile = arg
-    elif opt in ("-l","--language"):
-        optLanguage = arg
+
+parser = argparse.ArgumentParser("Parse Zap2it Guide into XMLTV")
+parser.add_argument("-c","--configfile","-i","--ifile", help='Path to config file')
+parser.add_argument("-o","--outputfile","--ofile", help='Path to output file')
+parser.add_argument("-l","--language", help='Language')
+
+args = parser.parse_args()
+print(args)
+if args.configfile is not None:
+    optConfigFile = args.configfile
+if args.outputfile is not None:
+    optGuideFile = args.outputfile
+if args.language is not None:
+    optLanguage = args.language
 
 guide = Zap2ItGuideScrape(optConfigFile,optGuideFile)
 if optLanguage != "en":
