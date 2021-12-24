@@ -170,7 +170,7 @@ class Zap2ItGuideScrape():
         dispName3 = self.CreateElementWithData("displayName",channel["callSign"])
         dispName4 = self.CreateElementWithData("displayName",channel["affiliateName"].title())
         iconEl = self.guideXML.createElement("icon")
-        iconEl.setAttribute("src","http://"+channel["thumbnail"].partition('?')[0])
+        iconEl.setAttribute("src","http://"+(channel["thumbnail"].partition('?')[0] or "").lstrip('/'))
         channelEl.appendChild(dispName1)
         channelEl.appendChild(dispName2)
         channelEl.appendChild(dispName3)
