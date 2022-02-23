@@ -148,6 +148,8 @@ class Zap2ItGuideScrape():
                 programEl.appendChild(self.guideXML.createElement("Finale"))
             if flag == "Premiere":
                 programEl.appendChild(self.guideXML.createElement("Premiere"))
+        if "New" not in event["flag"]:
+            programEl.appendChild(self.guideXML.createElement("previously-shown"))
         for tag in event["tags"]:
             if tag == "CC":
                 subtitlesEl = self.guideXML.createElement("subtitle")
