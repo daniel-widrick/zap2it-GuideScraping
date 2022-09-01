@@ -26,8 +26,8 @@ Added the -f flag to assist with finding the headendId and lineupId for various 
 Added an optional [lineup] section to the config to accomodate loading data for non-OTA providers
 The script will attempt to derive the lineupId from data available, but the headendId is buried deeper and must be set manually if changing providers.
 The 'device' field has also been added to the [lineup] config section and is supported in the script
-type           |name                                    |location       |headendID      |lineupID                 |device         
-OTA            |Local Over the Air Broadcast            |               |lineupId       |USA-lineupId-DEFAULT     |               
-CABLE          |Xfinity - Digital                       |Daly City      |CA55528        |USA-CA55528-DEFAULT      |X              
-SATELLITE      |DISH San Francisco - Satellite          |San Francisco  |DISH807        |USA-DISH807-DEFAULT      |-              
-CABLE          |AT&T U-verse TV - Digital               |San Francisco  |CA66343        |USA-CA66343-DEFAULT      |X              
+    type           |name                                    |location       |headendID      |lineupID                 |device         
+    OTA            |Local Over the Air Broadcast            |               |lineupId       |USA-lineupId-DEFAULT     |               
+    CABLE          |Xfinity - Digital                       |Daly City      |CA55528        |USA-CA55528-DEFAULT      |X              
+    SATELLITE      |DISH San Francisco - Satellite          |San Francisco  |DISH807        |USA-DISH807-DEFAULT      |-              
+    CABLE          |AT&T U-verse TV - Digital               |San Francisco  |CA66343        |USA-CA66343-DEFAULT      |X              
