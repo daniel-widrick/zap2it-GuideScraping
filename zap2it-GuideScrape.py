@@ -1,6 +1,6 @@
 import configparser
 import json
-import urllib.request, urllib.parse
+import urllib.parse, urllib.request
 import time, datetime
 import xml.dom.minidom
 import sys, os, argparse
@@ -35,18 +35,56 @@ class Zap2ItGuideScrape():
         authResponse = urllib.request.urlopen(authRequest).read()
         authFormVars = json.loads(authResponse)
         self.zapTocken = authFormVars["token"]
+        self.headendid= authFormVars["properties"]["2004"]
+    def BuildIDRequest(self):
+        url = "https://tvlistings.zap2it.com/gapzap_webapi/api/Providers/getPostalCodeProviders/"
+        url += self.config.get("prefs","country") + "/"
+        url += self.config.get("prefs","zipCode") + "/gapzap/"
+        if self.config.has_option("prefs","lang"):
+            url += self.config.get("prefs","lang")
+        else:
+            url += "en-us"
+        req = urllib.request.Request(url)
+        return req
+    def FindID(self):
+        idRequest = self.BuildIDRequest()
+        idResponse = urllib.request.urlopen(idRequest).read()
+        idVars = json.loads(idResponse)
+        print(f'{"type":<15}|{"name":<40}|{"location":<15}|',end='')
+        print(f'{"headendID":<15}|{"lineupID":<25}|{"device":<15}')
+        for provider in idVars["Providers"]:
+            print(f'{provider["type"]:<15}|',end='')
+            print(f'{provider["name"]:<40}|',end='')
+            print(f'{provider["location"]:<15}|',end='')
+            print(f'{provider["headendId"]:<15}|',end='')
+            print(f'{provider["lineupId"]:<25}|',end='')
+            print(f'{provider["device"]:<15}')
+
     def BuildDataRequest(self,currentTime):
+        #Defaults
+        lineupId = self.headendid
+        headendId = 'lineupId'
+        device = '-'
+
+
+        if self.config.has_option("lineup","linupId"):
+            lineupID = self.config.get("lineup","lineupId")
+        if self.config.has_option("lineup","headendId"):
+            headendId = self.config.get("lineup","headendId")
+        if self.config.has_option("lineup","device"):
+            device = self.config.get("lineup","device")
+
         parameters = {
             'Activity_ID': 1,
             'FromPage': "TV%20Guide",
             'AffiliateId': "gapzap",
             'token': self.zapToken,
             'aid': 'gapzap',
-            'lineupId': 'DFLTE',
+            'lineupId': lineupId,
             'timespan': 3,
-            'headendId': 'lineupId',
+            'headendId': headendId,
             'country': self.config.get("prefs", "country"),
-            'device': '-',
+            'device': device,
             'postalCode': self.config.get("prefs", "zipCode"),
             'isOverride': "true",
             'time': currentTime,
@@ -249,6 +287,7 @@ parser = argparse.ArgumentParser("Parse Zap2it Guide into XMLTV")
 parser.add_argument("-c","--configfile","-i","--ifile", help='Path to config file')
 parser.add_argument("-o","--outputfile","--ofile", help='Path to output file')
 parser.add_argument("-l","--language", help='Language')
+parser.add_argument("-f","--findid", action="store_true", help='Find Headendid / lineupid')
 
 args = parser.parse_args()
 print(args)
@@ -262,6 +301,11 @@ if args.language is not None:
 guide = Zap2ItGuideScrape(optConfigFile,optGuideFile)
 if optLanguage != "en":
     guide.lang = optLanguage
+
+if args.findid is not None and args.findid:
+    #locate the IDs
+    guide.FindID()
+    sys.exit()
 
 guide.BuildGuide()
 

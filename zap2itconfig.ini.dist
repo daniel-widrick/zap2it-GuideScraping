@@ -6,3 +6,7 @@ country: USA
 zipCode: 55555
 historicalGuideDays: 14
 lang: en
+[lineup]
+headendId: lineupId
+lineupId: DFLT
+device: -
