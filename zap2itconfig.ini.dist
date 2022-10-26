@@ -9,4 +9,4 @@ lang: en
 [lineup]
 headendId: lineupId
 lineupId: DFLT
-device: - # This needs to be X for certain non OTA providers
+device: -
