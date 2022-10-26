@@ -51,7 +51,7 @@ class Zap2ItGuideScrape():
         idResponse = urllib.request.urlopen(idRequest).read()
         idVars = json.loads(idResponse)
         print(f'{"type":<15}|{"name":<40}|{"location":<15}|',end='')
-        print(f'{"headendID":<15}|{"lineupID":<25}|{"device":<15}')
+        print(f'{"headendID":<15}|{"lineupId":<25}|{"device":<15}')
         for provider in idVars["Providers"]:
             print(f'{provider["type"]:<15}|',end='')
             print(f'{provider["name"]:<40}|',end='')
@@ -67,8 +67,8 @@ class Zap2ItGuideScrape():
         device = '-'
 
 
-        if self.config.has_option("lineup","linupId"):
-            lineupID = self.config.get("lineup","lineupId")
+        if self.config.has_option("lineup","lineupId"):
+            lineupId = self.config.get("lineup","lineupId")
         if self.config.has_option("lineup","headendId"):
             headendId = self.config.get("lineup","headendId")
         if self.config.has_option("lineup","device"):
