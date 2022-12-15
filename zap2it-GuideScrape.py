@@ -100,10 +100,11 @@ class Zap2ItGuideScrape():
         print("Load Guide for time: ",str(time))
         response = urllib.request.urlopen(request).read()
         return json.loads(response)
-    def AddResultsToGuide(self,json,addChannels=True):
+    def AddChannelsToGuide(self, json):
         for channel in json["channels"]:
-            if addChannels:
-                self.rootEl.appendChild(self.BuildChannelXML(channel))
+            self.rootEl.appendChild(self.BuildChannelXML(channel))
+    def AddEventsToGuide(self,json):
+        for channel in json["channels"]:
             for event in channel["events"]:
                 self.rootEl.appendChild(self.BuildEventXmL(event,channel["channelId"]))
     def BuildEventXmL(self,event,channelId):
@@ -249,8 +250,10 @@ class Zap2ItGuideScrape():
         loopTime = times[0]
         while(loopTime < times[1]):
             json = self.GetData(loopTime)
-            self.AddResultsToGuide(json,addChannels)
-            addChannels = False
+            if addChannels:
+                self.AddChannelsToGuide(json)     
+                addChannels = False           
+            self.AddEventsToGuide(json)
             loopTime += (60 * 60 * 3)
         self.guideXML.appendChild(self.rootEl)
         self.WriteGuide()
