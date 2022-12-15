@@ -138,11 +138,13 @@ class Zap2ItGuideScrape():
         lengthEl.setAttribute("units","minutes")
         programEl.appendChild(lengthEl)
 
-        thumnailEl = self.CreateElementWithData("thumnail","http://zap2it.tmsimg.com/assets/" + event["thumbnail"] + ".jpg")
-        iconEl = self.guideXML.createElement("icon")
-        iconEl.setAttribute("src","http://zap2it.tmsimg.com/assets/" + event["thumbnail"] + ".jpg")
-        programEl.appendChild(thumnailEl)
-        programEl.appendChild(iconEl)
+        if event["thumbnail"] is not None:
+            thumnailEl = self.CreateElementWithData("thumnail","http://zap2it.tmsimg.com/assets/" + event["thumbnail"] + ".jpg")
+            programEl.appendChild(thumnailEl)
+            iconEl = self.guideXML.createElement("icon")
+            iconEl.setAttribute("src","http://zap2it.tmsimg.com/assets/" + event["thumbnail"] + ".jpg")
+            programEl.appendChild(iconEl)
+
 
         urlEl = self.CreateElementWithData("url","https://tvlistings.zap2it.com//overview.html?programSeriesId=" + event["seriesId"] + "&amp;tmsId=" + event["program"]["id"])
         programEl.appendChild(urlEl)
