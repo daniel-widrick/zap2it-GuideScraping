@@ -35,12 +35,11 @@ The 'device' field has also been added to the [lineup] config section and is sup
 </pre>
 
 07-NOV-2022
-Docker isn't my strongest area so I'm not sure of the exact usecase, but I've created a VERY basic Dcokerfile 
+Docker isn't my strongest area so I'm not sure of the exact usecase, but I've created a VERY basic Dockerfile 
 Basic Docker Support:
 Run the following commands from the root of this repo in Windows(PowerShell) or linux:
 <pre>
-docker build -t zap2it:latest
+docker build -t zap2it:latest .
 docker run -v ${PWD}:/guide zap2it
 </pre>
 Running the script like this will read zap2itconfig.ini from the host current directory and output the .xmltv files to the host current directory.
-
