@@ -139,8 +139,8 @@ class Zap2ItGuideScrape():
         programEl.appendChild(lengthEl)
 
         if event["thumbnail"] is not None:
-            thumnailEl = self.CreateElementWithData("thumnail","http://zap2it.tmsimg.com/assets/" + event["thumbnail"] + ".jpg")
-            programEl.appendChild(thumnailEl)
+            thumbnailEl = self.CreateElementWithData("thumbnail","http://zap2it.tmsimg.com/assets/" + event["thumbnail"] + ".jpg")
+            programEl.appendChild(thumbnailEl)
             iconEl = self.guideXML.createElement("icon")
             iconEl.setAttribute("src","http://zap2it.tmsimg.com/assets/" + event["thumbnail"] + ".jpg")
             programEl.appendChild(iconEl)
