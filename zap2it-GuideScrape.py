@@ -277,7 +277,7 @@ class Zap2ItGuideScrape():
             fileName = os.path.join(outputDir,item)
             if os.path.isfile(fileName) & item.endswith('.xmltv'):
                 histGuideDays = self.config.get("prefs","historicalGuideDays")
-                if os.stat(fileName).st_mtime < int(histGuideDays) * 86400:
+                if (time.time() - os.stat(fileName).st_mtime) >= int(histGuideDays) * 86400:
                     os.remove(fileName)
 
 
