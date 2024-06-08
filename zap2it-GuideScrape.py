@@ -1,6 +1,6 @@
 import configparser
 import json
-import urllib.parse, urllib.request
+import urllib.parse, urllib.request, urllib.error
 import time, datetime
 import xml.dom.minidom
 import sys, os, argparse
@@ -10,10 +10,19 @@ class Zap2ItGuideScrape():
     def __init__(self,configLocation="./zap2itconfig.ini",outputFile="xmlguide.xmltv"):
         self.confLocation = configLocation
         self.outputFile=outputFile
+        if not os.path.exists(self.confLocation):
+            print("Error: " + self.confLocation + " does not exist.")
+            print("Copy config.ini.dist to config.ini and update the settings to match your zap2it account")
+            exit(1)
         print("Loading config: ", self.confLocation, " and outputting: ", outputFile)
+
         self.config = configparser.ConfigParser()
-        self.config.read(self.confLocation)
-        self.lang = self.config.get("prefs","lang")
+        config = self.config.read(self.confLocation)
+        if config == []:
+            print("Failed to read config: " + self.confLocation)
+            print("Check file permissions")
+            exit(1)
+        self.lang = self.config.get("prefs","lang", fallback="en")
 
         self.zapToken = ""
     def BuildAuthRequest(self):
@@ -32,7 +41,12 @@ class Zap2ItGuideScrape():
     def Authenticate(self):
         #Get token from login form
         authRequest = self.BuildAuthRequest()
-        authResponse = urllib.request.urlopen(authRequest).read()
+        try:
+            authResponse = urllib.request.urlopen(authRequest).read()
+        except urllib.error.URLError as e:
+            print("Error connecting to tvlistings.zap2it.com")
+            print(e.reason)
+            exit(1)
         authFormVars = json.loads(authResponse)
         self.zapTocken = authFormVars["token"]
         self.headendid= authFormVars["properties"]["2004"]
@@ -48,7 +62,12 @@ class Zap2ItGuideScrape():
         return req
     def FindID(self):
         idRequest = self.BuildIDRequest()
-        idResponse = urllib.request.urlopen(idRequest).read()
+        try:
+            idResponse = urllib.request.urlopen(idRequest).read()
+        except urllib.error.URLError as e:
+            print("Error loading provider IDs:")
+            print(e.reason)
+            exit(1)
         idVars = json.loads(idResponse)
         print(f'{"type":<15}|{"name":<40}|{"location":<15}|',end='')
         print(f'{"headendID":<15}|{"lineupId":<25}|{"device":<15}')
@@ -62,17 +81,9 @@ class Zap2ItGuideScrape():
 
     def BuildDataRequest(self,currentTime):
         #Defaults
-        lineupId = self.headendid
-        headendId = 'lineupId'
-        device = '-'
-
-
-        if self.config.has_option("lineup","lineupId"):
-            lineupId = self.config.get("lineup","lineupId")
-        if self.config.has_option("lineup","headendId"):
-            headendId = self.config.get("lineup","headendId")
-        if self.config.has_option("lineup","device"):
-            device = self.config.get("lineup","device")
+        lineupId = self.config.get("lineup","lineupId",fallback=self.headendid)
+        headendId = self.config.get("lineup","headendId",fallback='lineupId')
+        device = self.config.get("lineup","device",fallback='-')
 
         parameters = {
             'Activity_ID': 1,
