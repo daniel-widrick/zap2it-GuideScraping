@@ -1,20 +1,17 @@
-FROM alpine:latest
-RUN apk add --no-cache lighttpd python3
+FROM python:3.11-slim
 
 WORKDIR /guide
+
 COPY . /guide
 
-RUN chmod +x start.sh
+RUN apt-get update && apt-get install -y cron busybox && \
+    chmod +x /guide/zap2it-GuideScrape.py
 
-# Configure lighttpd to serve files from /guide/www
-RUN mkdir -p /guide/www && \
-    mkdir -p /guide/config && \
-    sed -i 's|server\.document-root.*|server.document-root = \"/guide/www\"|' /etc/lighttpd/lighttpd.conf && \
-    mkdir -p /run/lighttpd
+RUN echo "0 2 * * * /usr/bin/python3 /app/zap2it-GuideScrape.py -c /guide/config/zap2itconfig.ini -o guide.xml >> /guide/scrape.log 2>&1" > /etc/cron.d/guide-cron \
+    && chmod 0644 /etc/cron.d/guide-cron \
+    && crontab /etc/cron.d/guide-cron
 
-# Create a cron job to run guide scape every day at midnight
-RUN echo "0 2 * * * python3 zap2it-GuideScrape.py -c ./config/zap2itconfig.ini -o ./www/guide.xml" > /etc/crontabs/root
-
-EXPOSE 80
-
-CMD ["./start.sh"]
+CMD python3 /guide/app/zap2it-GuideScrape.py -c /guide/config/zap2itconfig.ini -o guide.xml | tee -a /guide/scrape.log && \
+    cron && \
+    busybox httpd -f -p 80 -h /guide && \
+    tail -f /var/log/cron.log

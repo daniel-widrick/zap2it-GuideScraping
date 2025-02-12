@@ -294,6 +294,9 @@ class Zap2ItGuideScrape():
 
 
 #Run the Scraper
+now = datetime.datetime.now()
+print("Fetching new guide: ")
+print(now.strftime("%Y-%m-%d %H:%M:%S"))
 optConfigFile = './zap2itconfig.ini'
 optGuideFile = 'xmlguide.xmltv'
 optLanguage = 'en'
