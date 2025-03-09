@@ -50,19 +50,20 @@ class Zap2ItGuideScrape():
         authFormVars = json.loads(authResponse)
         self.zapTocken = authFormVars["token"]
         self.headendid= authFormVars["properties"]["2004"]
-    def BuildIDRequest(self):
+    def BuildIDRequest(self,zipCode):
         url = "https://tvlistings.zap2it.com/gapzap_webapi/api/Providers/getPostalCodeProviders/"
         url += self.config.get("prefs","country") + "/"
-        url += self.config.get("prefs","zipCode") + "/gapzap/"
+        url += zipCode + "/gapzap/"
         if self.config.has_option("prefs","lang"):
             url += self.config.get("prefs","lang")
         else:
             url += "en-us"
         req = urllib.request.Request(url)
         return req
-    def FindID(self):
-        idRequest = self.BuildIDRequest()
+    def FindID(self,zipCode):
+        idRequest = self.BuildIDRequest(zipCode)
         try:
+            print("Loading profvider ID data from: ",idRequest.full_url)
             idResponse = urllib.request.urlopen(idRequest).read()
         except urllib.error.URLError as e:
             print("Error loading provider IDs:")
@@ -319,8 +320,22 @@ if optLanguage != "en":
     guide.lang = optLanguage
 
 if args.findid is not None and args.findid:
-    #locate the IDs
-    guide.FindID()
+    #Load zip codes
+    zipCodes = guide.config.get("prefs","zipCode")
+    #if zipCodes is an array: [12345,54321]
+    if "," in zipCodes:
+        #Parse json array into array
+        zipCodes = json.loads(zipCodes)
+        print(zipCodes)
+        print(type(zipCodes))
+    else:
+        zipCodes = [zipCodes]
+    for zipCode in zipCodes:
+        zipCode = str(zipCode)
+        #strip whitespace
+        zipCode = zipCode.strip()
+        print("Finding IDs for: ",zipCode)
+        guide.FindID(zipCode)
     sys.exit()
 
 guide.BuildGuide()
