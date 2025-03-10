@@ -377,7 +377,6 @@ def loadZipCodes():
     return zipCodes
 
 
-
 #Run the Scraper
 optConfigFile = './zap2itconfig.ini'
 optGuideFile = 'xmlguide.xmltv'
@@ -390,6 +389,7 @@ parser.add_argument("-o","--outputfile","--ofile", help='Path to output file')
 parser.add_argument("-l","--language", help='Language')
 parser.add_argument("-f","--findid", action="store_true", help='Find Headendid / lineupid')
 parser.add_argument("-C","--channels", action="store_true", help='List available channels')
+parser.add_argument("-w","--web", action="store_true", help="Start a webserver at http://localhost:9000 to serve /xmlguide.xmltv")
 
 args = parser.parse_args()
 print(args)
@@ -415,6 +415,38 @@ if args.findid is not None and args.findid:
 if args.channels is not None and args.channels:
     guide.showAvailableChannels()
     sys.exit()
+if args.web is not None and args.web:
+    import http.server
+    import socketserver
+    import threading
+    PORT = 9000
+    class httpHandler(http.server.SimpleHTTPRequestHandler):
+        def do_GET(self):
+            if self.path == '/xmlguide.xmltv':
+                self.send_response(200)
+                self.send_header("Content-type","text/xml")
+                self.end_headers()
+                with open(optGuideFile,"rb") as file:
+                    self.wfile.write(file.read())
+            else:
+                self.send_response(404)
+                self.end_headers()
+                self.wfile.write(b"404 Not Found")
+
+    Handler = httpHandler
+    with socketserver.TCPServer(("",PORT),Handler) as httpd:
+        print("Serving at port",PORT)
+        def run_guide_build():
+            while True:
+                guide.BuildGuide()
+                print("Guide Updated")
+                time.sleep(86400)  # Sleep for 24 hours
+
+        guide_thread = threading.Thread(target=run_guide_build)
+        guide_thread.daemon = True
+        guide_thread.start()
+        httpd.serve_forever()
+
 
 guide.BuildGuide()
 

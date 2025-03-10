@@ -5,7 +5,7 @@ Password: examplePass
 country: USA
 zipCode: [55555]
 historicalGuideDays: 14
-guideDays: 14
+guideDays: 2
 favoriteChannels:
 lang: en
 [lineup]
