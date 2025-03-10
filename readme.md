@@ -1,19 +1,22 @@
 
 This script is designed to take TV listings from zap2it and convert them to xmltv for use with applications such as Jellyfin/Emby.
 
-    $ python3 zap2it-GuideScrape.py -h
-    usage: Parse Zap2it Guide into XMLTV [-h] [-c CONFIGFILE] [-o OUTPUTFILE]
-                                     [-l LANGUAGE]
+```
+$ python3 zap2it-GuideScrape.py -h
+usage: Parse Zap2it Guide into XMLTV [-h] [-c CONFIGFILE] [-o OUTPUTFILE] [-l LANGUAGE] [-f] [-C] [-w]
 
-    optional arguments:
-      -h, --help            show this help message and exit
-      -c CONFIGFILE, --configfile CONFIGFILE, -i CONFIGFILE, --ifile CONFIGFILE
+options:
+  -h, --help            show this help message and exit
+  -c CONFIGFILE, --configfile CONFIGFILE, -i CONFIGFILE, --ifile CONFIGFILE
                         Path to config file
-      -o OUTPUTFILE, --outputfile OUTPUTFILE, --ofile OUTPUTFILE
+  -o OUTPUTFILE, --outputfile OUTPUTFILE, --ofile OUTPUTFILE
                         Path to output file
-      -l LANGUAGE, --language LANGUAGE
+  -l LANGUAGE, --language LANGUAGE
                         Language
-      -f, --findid          Find Headendid / lineupid
+  -f, --findid          Find Headendid / lineupid
+  -C, --channels        List available channels
+  -w, --web             Start a webserver at http://localhost:9000 to serve /xmlguide.xmltv
+```
 
 ## 18-OCT-2021
 Please note that --ofile, --ifile, and -i arguments may be deprecated and removed in a future release. Please use -c, --configfile, and -o, --outputfile accordingly.
