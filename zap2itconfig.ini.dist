@@ -3,8 +3,9 @@ Username: example@emailexmaple.com
 Password: examplePass
 [prefs]
 country: USA
-zipCode: 55555
+zipCode: [55555]
 historicalGuideDays: 14
+guideDays: 2
 lang: en
 [lineup]
 headendId: lineupId

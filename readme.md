@@ -43,3 +43,19 @@ docker build -t zap2it:latest .
 docker run -v ${PWD}:/guide zap2it
 </pre>
 Running the script like this will read zap2itconfig.ini from the host current directory and output the .xmltv files to the host current directory.
+
+09-MAR-2025
+Added support for multiple zipcodes. zap2itconfig.ini now supports listing multiple zip codes and should deduplicate the resulting guide with consideration to overlapping channels:
+```
+zipCode: [55555, 44444]
+```
+
+Single zip codes are still supporting using the old format:
+```
+zipCode: 55555
+```
+
+or a single entry in the new json format:
+```
+[55555]
+```
