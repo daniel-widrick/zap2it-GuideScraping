@@ -15,13 +15,10 @@ This script is designed to take TV listings from zap2it and convert them to xmlt
                         Language
       -f, --findid          Find Headendid / lineupid
 
-07-JUL-2020
-Finally upgraded for python 3
-
-18-OCT-2021
+## 18-OCT-2021
 Please note that --ofile, --ifile, and -i arguments may be deprecated and removed in a future release. Please use -c, --configfile, and -o, --outputfile accordingly.
 
-31-AUG-2022
+## 31-AUG-2022
 Added the -f flag to assist with finding the headendId and lineupId for various providers.
 Added an optional [lineup] section to the config to accomodate loading data for non-OTA providers
 The script will attempt to derive the lineupId from data available, but the headendId is buried deeper and must be set manually if changing providers.
@@ -34,7 +31,7 @@ The 'device' field has also been added to the [lineup] config section and is sup
     CABLE          |AT&T U-verse TV - Digital               |San Francisco  |CA66343        |USA-CA66343-DEFAULT      |X              
 </pre>
 
-07-NOV-2022
+## 07-NOV-2022
 Docker isn't my strongest area so I'm not sure of the exact usecase, but I've created a VERY basic Dockerfile 
 Basic Docker Support:
 Run the following commands from the root of this repo in Windows(PowerShell) or linux:
@@ -44,7 +41,7 @@ docker run -v ${PWD}:/guide zap2it
 </pre>
 Running the script like this will read zap2itconfig.ini from the host current directory and output the .xmltv files to the host current directory.
 
-09-MAR-2025
+## 09-MAR-2025
 Added support for multiple zipcodes. zap2itconfig.ini now supports listing multiple zip codes and should deduplicate the resulting guide with consideration to overlapping channels:
 ```
 zipCode: [55555, 44444]
