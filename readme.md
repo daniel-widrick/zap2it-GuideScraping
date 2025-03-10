@@ -42,6 +42,7 @@ docker run -v ${PWD}:/guide zap2it
 Running the script like this will read zap2itconfig.ini from the host current directory and output the .xmltv files to the host current directory.
 
 ## 09-MAR-2025
+### Multiple Zipcodes
 Added support for multiple zipcodes. zap2itconfig.ini now supports listing multiple zip codes and should deduplicate the resulting guide with consideration to overlapping channels:
 ```
 zipCode: [55555, 44444]
@@ -57,7 +58,13 @@ or a single entry in the new json format:
 [55555]
 ```
 
+### Channel Filtering
 Added support for channel filtering via `favoriteChannels:` in config. If this value is populated, only channel IDs listed in the config will be listed. Example:
 ```
 favoriteChannels: [53158,42578]
 ```
+
+### Web based guide
+Added a docker-compose.yml file that will run a webserver at `0.0.0.0:9000` and serve `/xmlguide.xmltv` while updating the guide in the background every 24 hours.
+
+This allows Jellyfin to point at the url and automatically receive guide updates with no further scripting.
