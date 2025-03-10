@@ -113,12 +113,21 @@ class Zap2ItGuideScrape():
         return req
     def GetData(self,time,zipCode):
         request = self.BuildDataRequest(time,zipCode)
-        print("Load Guide for time: ",str(time))
+        print("Load Guide for time: ",str(time)," :: ",zipCode)
+        #print(request.full_url)
         response = urllib.request.urlopen(request).read()
         return json.loads(response)
     def AddChannelsToGuide(self, json):
         global ADDED_CHANNELS
+        favoriteChannels = ""
+        try:
+            favoriteChannels = self.config.get("prefs","favoriteChannels")
+        except:
+            pass
         for channel in json["channels"]:
+            if favoriteChannels != "":
+                if channel["channelId"] not in favoriteChannels:
+                    continue
             if channel["channelId"] in ADDED_CHANNELS:
                 print("Duplicate Channel: ",channel["channelId"])
                 continue
@@ -128,7 +137,15 @@ class Zap2ItGuideScrape():
     def AddEventsToGuide(self,json):
         dedup_count = 0
         global ADDED_EVENTS
+        favoriteChannels = ""
+        try:
+            favoriteChannels = self.config.get("prefs","favoriteChannels")
+        except:
+            pass
         for channel in json["channels"]:
+            if favoriteChannels != "":
+                if channel["channelId"] not in favoriteChannels:
+                    continue
             for event in channel["events"]:
                 #Deduplicate json
                 eventHash = hash(channel.get("channelId") + event.get("startTime") + event.get("endTime"))
@@ -327,6 +344,27 @@ class Zap2ItGuideScrape():
                 histGuideDays = self.config.get("prefs","historicalGuideDays")
                 if (time.time() - os.stat(fileName).st_mtime) >= int(histGuideDays) * 86400:
                     os.remove(fileName)
+
+    def showAvailableChannels(self):
+        allJSON = []
+        self.Authenticate()
+        for zipCode in loadZipCodes():
+            zipCode = str(zipCode)
+            zipCode = zipCode.strip()
+            print("Loading available channels for: ",zipCode)
+            my_json = guide.GetData(time.time(), zipCode)
+            allJSON.append(my_json)
+        channelList = {}
+        for zip in allJSON:
+            for channel in zip["channels"]:
+                chanid = channel.get("channelId")
+                chanid = int(chanid)
+                channelList[chanid] = channel.get("callSign")  + "::" + channel.get("channelNo")
+        print(f'{"CHAN ID":<15}|{"name":<40}|',end='')
+        for channel in channelList:
+            print(f'{channel:<15}|',end='')
+            print(f'{channelList[channel]:<40}')
+
 def loadZipCodes():
     zipCodes = guide.config.get("prefs","zipCode")
     try:
@@ -337,6 +375,7 @@ def loadZipCodes():
         zipCodes = [zipCodes] #Support the old format
     print("Loaded Zip Codes: ",zipCodes)
     return zipCodes
+
 
 
 #Run the Scraper
@@ -350,6 +389,7 @@ parser.add_argument("-c","--configfile","-i","--ifile", help='Path to config fil
 parser.add_argument("-o","--outputfile","--ofile", help='Path to output file')
 parser.add_argument("-l","--language", help='Language')
 parser.add_argument("-f","--findid", action="store_true", help='Find Headendid / lineupid')
+parser.add_argument("-C","--channels", action="store_true", help='List available channels')
 
 args = parser.parse_args()
 print(args)
@@ -371,6 +411,9 @@ if args.findid is not None and args.findid:
         zipCode = zipCode.strip()
         print("Finding IDs for: ",zipCode)
         guide.FindID(zipCode)
+    sys.exit()
+if args.channels is not None and args.channels:
+    guide.showAvailableChannels()
     sys.exit()
 
 guide.BuildGuide()

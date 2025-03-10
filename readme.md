@@ -56,3 +56,8 @@ or a single entry in the new json format:
 ```
 [55555]
 ```
+
+Added support for channel filtering via `favoriteChannels:` in config. If this value is populated, only channel IDs listed in the config will be listed. Example:
+```
+favoriteChannels: [53158,42578]
+```
