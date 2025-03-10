@@ -5,6 +5,10 @@ import time, datetime
 import xml.dom.minidom
 import sys, os, argparse
 
+#Use Globals to track state of the guide
+ADDED_CHANNELS = []
+ADDED_EVENTS = []
+
 class Zap2ItGuideScrape():
 
     def __init__(self,configLocation="./zap2itconfig.ini",outputFile="xmlguide.xmltv"):
@@ -63,7 +67,7 @@ class Zap2ItGuideScrape():
     def FindID(self,zipCode):
         idRequest = self.BuildIDRequest(zipCode)
         try:
-            print("Loading profvider ID data from: ",idRequest.full_url)
+            print("Loading provider ID data from: ",idRequest.full_url)
             idResponse = urllib.request.urlopen(idRequest).read()
         except urllib.error.URLError as e:
             print("Error loading provider IDs:")
@@ -80,7 +84,7 @@ class Zap2ItGuideScrape():
             print(f'{provider["lineupId"]:<25}|',end='')
             print(f'{provider["device"]:<15}')
 
-    def BuildDataRequest(self,currentTime):
+    def BuildDataRequest(self,currentTime,zipCode):
         #Defaults
         lineupId = self.config.get("lineup","lineupId",fallback=self.headendid)
         headendId = self.config.get("lineup","headendId",fallback='lineupId')
@@ -97,7 +101,7 @@ class Zap2ItGuideScrape():
             'headendId': headendId,
             'country': self.config.get("prefs", "country"),
             'device': device,
-            'postalCode': self.config.get("prefs", "zipCode"),
+            'postalCode': zipCode,
             'isOverride': "true",
             'time': currentTime,
             'pref': 'm,p',
@@ -107,18 +111,40 @@ class Zap2ItGuideScrape():
         url = "https://tvlistings.zap2it.com/api/grid?" + data
         req = urllib.request.Request(url)
         return req
-    def GetData(self,time):
-        request = self.BuildDataRequest(time)
+    def GetData(self,time,zipCode):
+        request = self.BuildDataRequest(time,zipCode)
         print("Load Guide for time: ",str(time))
         response = urllib.request.urlopen(request).read()
         return json.loads(response)
     def AddChannelsToGuide(self, json):
+        global ADDED_CHANNELS
         for channel in json["channels"]:
-            self.rootEl.appendChild(self.BuildChannelXML(channel))
+            if channel["channelId"] in ADDED_CHANNELS:
+                print("Duplicate Channel: ",channel["channelId"])
+                continue
+            else:
+                self.rootEl.appendChild(self.BuildChannelXML(channel))
+                ADDED_CHANNELS.append(channel["channelId"])
     def AddEventsToGuide(self,json):
+        dedup_count = 0
+        global ADDED_EVENTS
         for channel in json["channels"]:
             for event in channel["events"]:
-                self.rootEl.appendChild(self.BuildEventXmL(event,channel["channelId"]))
+                #Deduplicate json
+                eventHash = hash(channel.get("channelId") + event.get("startTime") + event.get("endTime"))
+                if eventHash not in ADDED_EVENTS:
+                    newChild = self.BuildEventXmL(event,channel["channelId"])
+                    self.rootEl.appendChild(newChild)
+                    ADDED_EVENTS.append(eventHash)
+                else:
+                    #print("Duplicate Event: ",event["program"]["title"]," on ",channel["channelId"]) #Debug dedeuplication
+                    #This channel has been added for another zip?
+                    dedup_count += len(channel["events"])
+                    break #This break may cause missing programs? Investigate if someone reports missing programs
+                    #The channel listing should be identical across zip codes but two zip codes returning the same channel
+                    ## with different event listings could cause this.
+        print("Deduped ",dedup_count," events")
+                    
     def BuildEventXmL(self,event,channelId):
         #preConfig
         season = "0"
@@ -243,7 +269,13 @@ class Zap2ItGuideScrape():
         currentTimestamp -= 60 * 60 * 24
         halfHourOffset = currentTimestamp % (60 * 30)
         currentTimestamp = currentTimestamp - halfHourOffset
-        endTimeStamp = currentTimestamp + (60 * 60 * 336)
+        days = 14
+        try:
+            days = int(self.config.get("prefs","guideDays"))
+        except:
+            print("guideDays not in config. using default: 14")
+        print("Loading guide data for ",days," days")
+        endTimeStamp = currentTimestamp + (60 * 60 * 24 * days)
         return (currentTimestamp,endTimeStamp)
     def BuildRootEl(self):
         self.rootEl = self.guideXML.createElement('tv')
@@ -262,12 +294,16 @@ class Zap2ItGuideScrape():
         addChannels = True;
         times = self.GetGuideTimes()
         loopTime = times[0]
+        zipCodes = loadZipCodes()
         while(loopTime < times[1]):
-            json = self.GetData(loopTime)
-            if addChannels:
-                self.AddChannelsToGuide(json)     
-                addChannels = False           
-            self.AddEventsToGuide(json)
+            for zipCode in zipCodes:
+                zipCode = str(zipCode)
+                zipCode = zipCode.strip()
+                zip_json = self.GetData(loopTime,zipCode)
+                if addChannels:
+                    self.AddChannelsToGuide(zip_json)   
+                self.AddEventsToGuide(zip_json)
+            addChannels = False
             loopTime += (60 * 60 * 3)
         self.guideXML.appendChild(self.rootEl)
         self.WriteGuide()
@@ -291,7 +327,16 @@ class Zap2ItGuideScrape():
                 histGuideDays = self.config.get("prefs","historicalGuideDays")
                 if (time.time() - os.stat(fileName).st_mtime) >= int(histGuideDays) * 86400:
                     os.remove(fileName)
-
+def loadZipCodes():
+    zipCodes = guide.config.get("prefs","zipCode")
+    try:
+        zipCodes = json.loads(zipCodes)
+        if not isinstance(zipCodes,list):
+            zipCodes = [zipCodes]
+    except json.JSONDecodeError:
+        zipCodes = [zipCodes] #Support the old format
+    print("Loaded Zip Codes: ",zipCodes)
+    return zipCodes
 
 
 #Run the Scraper
@@ -320,17 +365,7 @@ if optLanguage != "en":
     guide.lang = optLanguage
 
 if args.findid is not None and args.findid:
-    #Load zip codes
-    zipCodes = guide.config.get("prefs","zipCode")
-    #if zipCodes is an array: [12345,54321]
-    if "," in zipCodes:
-        #Parse json array into array
-        zipCodes = json.loads(zipCodes)
-        print(zipCodes)
-        print(type(zipCodes))
-    else:
-        zipCodes = [zipCodes]
-    for zipCode in zipCodes:
+    for zipCode in loadZipCodes():
         zipCode = str(zipCode)
         #strip whitespace
         zipCode = zipCode.strip()
