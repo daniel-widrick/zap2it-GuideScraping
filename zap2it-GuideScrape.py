@@ -153,10 +153,6 @@ class Zap2ItGuideScrape():
                     newChild = self.BuildEventXmL(event,channel["channelId"])
                     self.rootEl.appendChild(newChild)
                     ADDED_EVENTS.append(eventHash)
-                else:
-                    #print("Duplicate Event: ",event["program"]["title"]," on ",channel["channelId"]) #Debug dedeuplication
-                    #Don't add duplicate event
-        print("Deduped ",dedup_count," events")
                     
     def BuildEventXmL(self,event,channelId):
         #preConfig
