@@ -30,7 +30,7 @@ class Zap2ItGuideScrape():
 
         self.zapToken = ""
     def BuildAuthRequest(self):
-        url = "https://tvlistings.zap2it.com/api/user/login"
+        url = "https://tvlistings.gracenote.com/api/user/login"
         parameters = {
             "emailid": self.config.get("creds","username"),
             "password": self.config.get("creds","password"),
@@ -48,14 +48,14 @@ class Zap2ItGuideScrape():
         try:
             authResponse = urllib.request.urlopen(authRequest).read()
         except urllib.error.URLError as e:
-            print("Error connecting to tvlistings.zap2it.com")
+            print("Error connecting to tvlistings.gracenote.com")
             print(e.reason)
             exit(1)
         authFormVars = json.loads(authResponse)
         self.zapTocken = authFormVars["token"]
         self.headendid= authFormVars["properties"]["2004"]
     def BuildIDRequest(self,zipCode):
-        url = "https://tvlistings.zap2it.com/gapzap_webapi/api/Providers/getPostalCodeProviders/"
+        url = "https://tvlistings.gracenote.com/gapzap_webapi/api/Providers/getPostalCodeProviders/"
         url += self.config.get("prefs","country") + "/"
         url += zipCode + "/gapzap/"
         if self.config.has_option("prefs","lang"):
@@ -108,7 +108,7 @@ class Zap2ItGuideScrape():
             'userId': '-'
         }
         data = urllib.parse.urlencode(parameters)
-        url = "https://tvlistings.zap2it.com/api/grid?" + data
+        url = "https://tvlistings.gracenote.com/api/grid?" + data
         req = urllib.request.Request(url)
         return req
     def GetData(self,time,zipCode):
@@ -201,7 +201,7 @@ class Zap2ItGuideScrape():
             programEl.appendChild(iconEl)
 
 
-        urlEl = self.CreateElementWithData("url","https://tvlistings.zap2it.com//overview.html?programSeriesId=" + event["seriesId"] + "&amp;tmsId=" + event["program"]["id"])
+        urlEl = self.CreateElementWithData("url","https://tvlistings.gracenote.com//overview.html?programSeriesId=" + event["seriesId"] + "&amp;tmsId=" + event["program"]["id"])
         programEl.appendChild(urlEl)
         #Build Season Data
         try:
@@ -296,7 +296,7 @@ class Zap2ItGuideScrape():
         return (currentTimestamp,endTimeStamp)
     def BuildRootEl(self):
         self.rootEl = self.guideXML.createElement('tv')
-        self.rootEl.setAttribute("source-info-url","http://tvlistings.zap2it.com/")
+        self.rootEl.setAttribute("source-info-url","http://tvlistings.gracenote.com/")
         self.rootEl.setAttribute("source-info-name","zap2it")
         self.rootEl.setAttribute("generator-info-name","zap2it-GuideScraping)")
         self.rootEl.setAttribute("generator-info-url","daniel@widrick.net")
