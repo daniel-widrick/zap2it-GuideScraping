@@ -217,15 +217,19 @@ class Zap2ItGuideScrape():
             categoryEl.setAttribute("lang",self.lang)
             programEl.appendChild(categoryEl)
 
-        if((int(season) != 0) and (int(episode) != 0)):
+        if(int(episode) != 0):
             categoryEl = self.CreateElementWithData("category","Series")
             programEl.appendChild(categoryEl)
             episodeNum =  "S" + str(event["seriesId"]).zfill(2) + "E" + str(episode.zfill(2))
             episodeNumEl = self.CreateElementWithData("episode-num",episodeNum)
             episodeNumEl.setAttribute("system","common")
             programEl.appendChild(episodeNumEl)
-            episodeNum = str(int(season)-1) + "." +str(int(episode)-1)
+            seasonStr = ""
+            if(int(season) != 0):
+                seasonStr = str(int(season)-1)
+            episodeNum = seasonStr + "." +str(int(episode)-1)
             episodeNumEl = self.CreateElementWithData("episode-num",episodeNum)
+            episodeNumEl.setAttribute("system", "xmltv_ns")
             programEl.appendChild(episodeNumEl)
 
         if event["program"]["id"[-4:]] == "0000":
