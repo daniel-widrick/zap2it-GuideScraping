@@ -152,8 +152,7 @@ class Zap2ItGuideScrape():
                 if eventHash not in ADDED_EVENTS:
                     newChild = self.BuildEventXmL(event,channel["channelId"])
                     self.rootEl.appendChild(newChild)
-                    ADDED_EVENTS.append(eventHash)
-                    
+                    ADDED_EVENTS.append(eventHash)                    
     def BuildEventXmL(self,event,channelId):
         #preConfig
         season = "0"
@@ -212,7 +211,8 @@ class Zap2ItGuideScrape():
         if(int(episode) != 0):
             categoryEl = self.CreateElementWithData("category","Series")
             programEl.appendChild(categoryEl)
-            episodeNum =  "S" + str(event["seriesId"]).zfill(2) + "E" + str(episode.zfill(2))
+            #episodeNum =  "S" + str(event["seriesId"]).zfill(2) + "E" + str(episode.zfill(2))
+            episodeNum =  "S" + str(season).zfill(2) + "E" + str(episode.zfill(2))
             episodeNumEl = self.CreateElementWithData("episode-num",episodeNum)
             episodeNumEl.setAttribute("system","common")
             programEl.appendChild(episodeNumEl)
