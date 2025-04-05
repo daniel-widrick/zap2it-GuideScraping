@@ -155,11 +155,7 @@ class Zap2ItGuideScrape():
                     ADDED_EVENTS.append(eventHash)
                 else:
                     #print("Duplicate Event: ",event["program"]["title"]," on ",channel["channelId"]) #Debug dedeuplication
-                    #This channel has been added for another zip?
-                    dedup_count += len(channel["events"])
-                    break #This break may cause missing programs? Investigate if someone reports missing programs
-                    #The channel listing should be identical across zip codes but two zip codes returning the same channel
-                    ## with different event listings could cause this.
+                    #Don't add duplicate event
         print("Deduped ",dedup_count," events")
                     
     def BuildEventXmL(self,event,channelId):
