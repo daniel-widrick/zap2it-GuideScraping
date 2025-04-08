@@ -1,0 +1,10 @@
+
+services:
+  guide-scraper:
+    build: .
+    container_name: guide-scraper
+    ports:
+      - "9000:9000"
+    environment:
+      - TZ=America/New_York
+    restart: always

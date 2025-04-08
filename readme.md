@@ -1,27 +1,27 @@
 
 This script is designed to take TV listings from zap2it and convert them to xmltv for use with applications such as Jellyfin/Emby.
 
-    $ python3 zap2it-GuideScrape.py -h
-    usage: Parse Zap2it Guide into XMLTV [-h] [-c CONFIGFILE] [-o OUTPUTFILE]
-                                     [-l LANGUAGE]
+```
+$ python3 zap2it-GuideScrape.py -h
+usage: Parse Zap2it Guide into XMLTV [-h] [-c CONFIGFILE] [-o OUTPUTFILE] [-l LANGUAGE] [-f] [-C] [-w]
 
-    optional arguments:
-      -h, --help            show this help message and exit
-      -c CONFIGFILE, --configfile CONFIGFILE, -i CONFIGFILE, --ifile CONFIGFILE
+options:
+  -h, --help            show this help message and exit
+  -c CONFIGFILE, --configfile CONFIGFILE, -i CONFIGFILE, --ifile CONFIGFILE
                         Path to config file
-      -o OUTPUTFILE, --outputfile OUTPUTFILE, --ofile OUTPUTFILE
+  -o OUTPUTFILE, --outputfile OUTPUTFILE, --ofile OUTPUTFILE
                         Path to output file
-      -l LANGUAGE, --language LANGUAGE
+  -l LANGUAGE, --language LANGUAGE
                         Language
-      -f, --findid          Find Headendid / lineupid
+  -f, --findid          Find Headendid / lineupid
+  -C, --channels        List available channels
+  -w, --web             Start a webserver at http://localhost:9000 to serve /xmlguide.xmltv
+```
 
-07-JUL-2020
-Finally upgraded for python 3
-
-18-OCT-2021
+## 18-OCT-2021
 Please note that --ofile, --ifile, and -i arguments may be deprecated and removed in a future release. Please use -c, --configfile, and -o, --outputfile accordingly.
 
-31-AUG-2022
+## 31-AUG-2022
 Added the -f flag to assist with finding the headendId and lineupId for various providers.
 Added an optional [lineup] section to the config to accomodate loading data for non-OTA providers
 The script will attempt to derive the lineupId from data available, but the headendId is buried deeper and must be set manually if changing providers.
@@ -34,7 +34,7 @@ The 'device' field has also been added to the [lineup] config section and is sup
     CABLE          |AT&T U-verse TV - Digital               |San Francisco  |CA66343        |USA-CA66343-DEFAULT      |X              
 </pre>
 
-07-NOV-2022
+## 07-NOV-2022
 Docker isn't my strongest area so I'm not sure of the exact usecase, but I've created a VERY basic Dockerfile 
 Basic Docker Support:
 Run the following commands from the root of this repo in Windows(PowerShell) or linux:
@@ -43,3 +43,31 @@ docker build -t zap2it:latest .
 docker run -v ${PWD}:/guide zap2it
 </pre>
 Running the script like this will read zap2itconfig.ini from the host current directory and output the .xmltv files to the host current directory.
+
+## 09-MAR-2025
+### Multiple Zipcodes
+Added support for multiple zipcodes. zap2itconfig.ini now supports listing multiple zip codes and should deduplicate the resulting guide with consideration to overlapping channels:
+```
+zipCode: [55555, 44444]
+```
+
+Single zip codes are still supporting using the old format:
+```
+zipCode: 55555
+```
+
+or a single entry in the new json format:
+```
+[55555]
+```
+
+### Channel Filtering
+Added support for channel filtering via `favoriteChannels:` in config. If this value is populated, only channel IDs listed in the config will be listed. Example:
+```
+favoriteChannels: [53158,42578]
+```
+
+### Web based guide
+Added a docker-compose.yml file that will run a webserver at `0.0.0.0:9000` and serve `/xmlguide.xmltv` while updating the guide in the background every 24 hours.
+
+This allows Jellyfin to point at the url and automatically receive guide updates with no further scripting.
