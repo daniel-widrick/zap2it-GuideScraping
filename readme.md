@@ -77,6 +77,8 @@ This allows Jellyfin to point at the url and automatically receive guide updates
 All values in the zap2itconfig.ini can now be passed as environment variables via docker compose (or in the normal env). Variables take the form:
 `ZAP2IT_SECITON_KEY`
 
+Variables passed from the environment take precedence. Then variables from the zap2itconfig.ini. Then any hard coded defaults int he script.
+
 EG:
 ```
 services:
