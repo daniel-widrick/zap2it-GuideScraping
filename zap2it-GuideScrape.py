@@ -26,14 +26,25 @@ class Zap2ItGuideScrape():
             print("Failed to read config: " + self.confLocation)
             print("Check file permissions")
             exit(1)
-        self.lang = self.config.get("prefs","lang", fallback="en")
+        # Use get_config_value for all config lookups
+        self.lang = self.get_config_value("prefs","lang", fallback="en")
 
         self.zapToken = ""
+    def get_config_value(self, section, key, fallback=None):
+        # Environment variable name: ZAP2IT_SECTION_KEY
+        env_var = f"ZAP2IT_{section.upper()}_{key.upper()}"
+        print(f"Checking for environment variable: {env_var}")
+        if env_var in os.environ:
+            print(f"Using environment variable {env_var} for {section}.{key}")
+            return os.environ[env_var]
+        print(f"Using config.ini value for {section}.{key}")
+        return self.config.get(section, key, fallback=fallback)
+
     def BuildAuthRequest(self):
         url = "https://tvlistings.gracenote.com/api/user/login"
         parameters = {
-            "emailid": self.config.get("creds","username"),
-            "password": self.config.get("creds","password"),
+            "emailid": self.get_config_value("creds","username"),
+            "password": self.get_config_value("creds","password"),
             "isfacebookuser": "false",
             "usertype": 0,
             "objectid": ""
@@ -56,12 +67,11 @@ class Zap2ItGuideScrape():
         self.headendid= authFormVars["properties"]["2004"]
     def BuildIDRequest(self,zipCode):
         url = "https://tvlistings.gracenote.com/gapzap_webapi/api/Providers/getPostalCodeProviders/"
-        url += self.config.get("prefs","country") + "/"
+        url += self.get_config_value("prefs","country", fallback="us") + "/"
         url += zipCode + "/gapzap/"
-        if self.config.has_option("prefs","lang"):
-            url += self.config.get("prefs","lang")
-        else:
-            url += "en-us"
+        lang = self.get_config_value("prefs","lang", fallback="en-us")
+        if lang != "":
+            url += lang
         req = urllib.request.Request(url)
         return req
     def FindID(self,zipCode):
@@ -86,9 +96,9 @@ class Zap2ItGuideScrape():
 
     def BuildDataRequest(self,currentTime,zipCode):
         #Defaults
-        lineupId = self.config.get("lineup","lineupId",fallback=self.headendid)
-        headendId = self.config.get("lineup","headendId",fallback='lineupId')
-        device = self.config.get("lineup","device",fallback='-')
+        lineupId = self.get_config_value("lineup","lineupId", fallback=self.headendid)
+        headendId = self.get_config_value("lineup","headendId", 'lineupId')
+        device = self.get_config_value("lineup","device", fallback='-')
 
         parameters = {
             'Activity_ID': 1,
@@ -99,7 +109,7 @@ class Zap2ItGuideScrape():
             'lineupId': lineupId,
             'timespan': 3,
             'headendId': headendId,
-            'country': self.config.get("prefs", "country"),
+            'country': self.get_config_value("prefs", "country"),
             'device': device,
             'postalCode': zipCode,
             'isOverride': "true",
@@ -121,7 +131,7 @@ class Zap2ItGuideScrape():
         global ADDED_CHANNELS
         favoriteChannels = ""
         try:
-            favoriteChannels = self.config.get("prefs","favoriteChannels")
+            favoriteChannels = self.get_config_value("prefs","favoriteChannels", fallback="")
         except:
             pass
         for channel in json["channels"]:
@@ -139,7 +149,10 @@ class Zap2ItGuideScrape():
         global ADDED_EVENTS
         favoriteChannels = ""
         try:
-            favoriteChannels = self.config.get("prefs","favoriteChannels")
+            favoriteChannels = self.get_config_value("prefs","favoriteChannels", fallback="")
+            if favoriteChannels == "":
+                print("No favorite channels set, all channels will be included.")
+                raise ValueError("No favorite channels set") #TODO: Pretty dirty
         except:
             pass
         for channel in json["channels"]:
@@ -284,7 +297,7 @@ class Zap2ItGuideScrape():
         currentTimestamp = currentTimestamp - halfHourOffset
         days = 14
         try:
-            days = int(self.config.get("prefs","guideDays"))
+            days = int(self.get_config_value("prefs","guideDays", fallback="14"))
         except:
             print("guideDays not in config. using default: 14")
         print("Loading guide data for ",days," days")
@@ -337,7 +350,7 @@ class Zap2ItGuideScrape():
         for item in os.listdir(outputDir):
             fileName = os.path.join(outputDir,item)
             if os.path.isfile(fileName) & item.endswith('.xmltv'):
-                histGuideDays = self.config.get("prefs","historicalGuideDays")
+                histGuideDays = self.get_config_value("prefs","historicalGuideDays", fallback="30")
                 if (time.time() - os.stat(fileName).st_mtime) >= int(histGuideDays) * 86400:
                     os.remove(fileName)
 
@@ -362,7 +375,11 @@ class Zap2ItGuideScrape():
             print(f'{channelList[channel]:<40}')
 
 def loadZipCodes():
-    zipCodes = guide.config.get("prefs","zipCode")
+    zipCodes = guide.get_config_value("prefs","zipCode", fallback="")
+    if zipCodes == "":
+        print("No Zip Codes configured in config.ini")
+        print("Please set the zipCode in the config.ini file under [prefs] section")
+        exit(1)
     try:
         zipCodes = json.loads(zipCodes)
         if not isinstance(zipCodes,list):

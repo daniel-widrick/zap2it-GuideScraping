@@ -71,3 +71,40 @@ favoriteChannels: [53158,42578]
 Added a docker-compose.yml file that will run a webserver at `0.0.0.0:9000` and serve `/xmlguide.xmltv` while updating the guide in the background every 24 hours.
 
 This allows Jellyfin to point at the url and automatically receive guide updates with no further scripting.
+
+## 02-JUN-2025
+### Environment variable config
+All values in the zap2itconfig.ini can now be passed as environment variables via docker compose (or in the normal env). Variables take the form:
+`ZAP2IT_SECITON_KEY`
+
+EG:
+```
+services:
+  guide-scraper-dtv:
+    build: .
+    container_name: guide-scraper-dtv
+    ports:
+      - "9000:9000"
+    environment:
+      - TZ=America/New_York
+      - ZAP2IT_PREFS_LANG=es
+      - ZAP2IT_PREFS_COUNTRY=US
+      - ZAP2IT_CRED_USERNAME=your_username
+      - ZAP2IT_CRED_PASSWORD=your_password
+      - ZAP2IT_LINEUP_LINEUPID=USA-DITV528-DEFAULT
+      - ZAP2IT_LINEUP_HEADENDID=DITV528
+  guide-scraper-ota:
+    build: .
+    container_name: guide-scraper-ota
+    ports:
+      - "9001:9000"
+    environment:
+      - TZ=America/New_York
+      - ZAP2IT_PREFS_LANG=es
+      - ZAP2IT_PREFS_COUNTRY=US
+      - ZAP2IT_CRED_USERNAME=your_username
+      - ZAP2IT_CRED_PASSWORD=your_password
+      - ZAP2IT_LINEUP_LINEUPID=DFLT
+      - ZAP2IT_LINEUP_HEADENDID=lineupId
+    restart: always
+```
