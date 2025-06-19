@@ -51,7 +51,7 @@ class Zap2ItGuideScrape():
         }
         data = urllib.parse.urlencode((parameters))
         data = data.encode('ascii')
-        req = urllib.request.Request(url, data, , headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
+        req = urllib.request.Request(url, data, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
         return req
     def Authenticate(self):
         #Get token from login form
