@@ -51,7 +51,7 @@ class Zap2ItGuideScrape():
         }
         data = urllib.parse.urlencode((parameters))
         data = data.encode('ascii')
-        req = urllib.request.Request(url, data)
+        req = urllib.request.Request(url, data, , headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
         return req
     def Authenticate(self):
         #Get token from login form
@@ -72,7 +72,7 @@ class Zap2ItGuideScrape():
         lang = self.get_config_value("prefs","lang", fallback="en-us")
         if lang != "":
             url += lang
-        req = urllib.request.Request(url)
+        req = urllib.request.Request(url, data=None, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
         return req
     def FindID(self,zipCode):
         idRequest = self.BuildIDRequest(zipCode)
@@ -119,7 +119,7 @@ class Zap2ItGuideScrape():
         }
         data = urllib.parse.urlencode(parameters)
         url = "https://tvlistings.gracenote.com/api/grid?" + data
-        req = urllib.request.Request(url)
+        req = urllib.request.Request(url, nodata=None, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
         return req
     def GetData(self,time,zipCode):
         request = self.BuildDataRequest(time,zipCode)
