@@ -119,9 +119,11 @@ class Zap2ItGuideScrape():
         }
         data = urllib.parse.urlencode(parameters)
         url = "https://tvlistings.gracenote.com/api/grid?" + data
-        req = urllib.request.Request(url, nodata=None, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
+        req = urllib.request.Request(url, data=None, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
+        
         return req
     def GetData(self,time,zipCode):
+        print("Building data for {time} :: {zipCode}")
         request = self.BuildDataRequest(time,zipCode)
         print("Load Guide for time: ",str(time)," :: ",zipCode)
         #print(request.full_url)
