@@ -4,3 +4,33 @@ xmlguide.xmltv
 *.xmltv
 *.swp
 zap2itconfig.ini.bck
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env
+virtualenv/
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-*
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Claude Code settings
+.claude/*
